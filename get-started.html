@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Try it now — DIY Easy Read</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="wrap site-header">
+  <a class="logo" href="index.html">
+    <img src="assets/img/logo-diyer.png" alt="DIY Easy Read logo: an open book outline with a tick inside, and a star in the top right corner" style="height:48px; width:auto;">
+  </a>
+  <nav class="main-nav" aria-label="Main">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="pricing.html">Pricing</a>
+  </nav>
+  <div class="nav-actions">
+    <span class="btn btn-step">Trying it out</span>
+    <a class="link" href="#sign-in">Sign up or sign in</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="dropzone" id="dropzone">
+    <img class="dropzone-art dropzone-art-left" src="assets/img/figma/asset-woman-thinking.png" alt="A woman with a thoughtful expression, presenting an open hand">
+    <div class="dropzone-content">
+      <img src="assets/icons/arrow-right.svg" alt="" class="dropzone-arrow" width="40" height="40" style="transform: rotate(90deg);">
+      <h2>Drop your doc here!</h2>
+      <p class="body-large">or tap to select a file</p>
+      <p class="body-small dropzone-caption">Word file or pdf up to 20pg, max 50MB</p>
+      <input type="file" id="file-input" accept=".doc,.docx,.pdf" style="display:none;">
+    </div>
+    <img class="dropzone-art dropzone-art-right" src="assets/img/figma/asset-doc-stack.png" alt="A stack of blank document pages">
+  </div>
+
+  <label class="auto-toggle">
+    <span class="toggle-switch">
+      <input type="checkbox" id="auto-translate">
+      <span class="toggle-track"><span class="toggle-knob"></span></span>
+    </span>
+    Translate docs automatically
+  </label>
+</main>
+
+<footer class="site-footer wrap">
+  <span>&copy; DIY Easy Read, from Volition</span>
+  <nav aria-label="Footer">
+    <a href="about.html">About</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="#terms">Terms of Service</a>
+    <a href="#contact">Contact us</a>
+  </nav>
+</footer>
+
+<script>
+  const dz = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  dz.addEventListener('click', () => fileInput.click());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  function goToTranslating() { window.location.href = 'translating.html'; }
+  dz.addEventListener('drop', e => { e.preventDefault(); goToTranslating(); });
+  fileInput.addEventListener('change', () => { if (fileInput.files.length) goToTranslating(); });
+</script>
+
+</body>
+</html>
