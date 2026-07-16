@@ -105,13 +105,35 @@
 .hero-art img { max-width: 420px; }
 
 .quote {
-  border-left: 4px solid var(--divider-dark);
-  padding-left: var(--space-5);
-  font-style: normal;
-  color: var(--fg-secondary);
-  margin: var(--space-8) 0;
+  background: var(--lavender-700);
+  color: var(--text-inverted);
+  border: none;
+  margin: 0;
+  padding: var(--space-8) var(--space-5);
+  position: relative;
+  font-style: italic;
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-body-lg);
+  text-align: center;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
 }
-.quote cite { display: block; margin-top: var(--space-3); font-weight: var(--font-weight-semibold); color: var(--fg-primary); font-style: normal; }
+.quote::before {
+  content: "\201C";
+  display: block;
+  font-style: normal;
+  font-weight: var(--font-weight-semibold);
+  font-size: 64px;
+  line-height: 1;
+  color: var(--lavender-400);
+  margin-bottom: var(--space-3);
+}
+.quote cite { display: block; margin-top: var(--space-4); font-weight: var(--font-weight-semibold); color: var(--text-inverted); font-style: normal; }
+.quote-band {
+  background: var(--lavender-700);
+  width: 100%;
+}
 
 /* -------- Sections -------- */
 .section { padding: var(--space-8) 0; }
