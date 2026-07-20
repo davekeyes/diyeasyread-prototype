@@ -567,11 +567,11 @@
 /* Positioned out of flow so its width/presence never shifts the text block */
 .hero-drop-illustration { position: absolute; top: var(--space-5); left: var(--space-6); width: 558px; height: 408px; }
 .hero-drop-illustration img { width: 100%; height: 100%; object-fit: contain; display: block; }
-/* Occupies the cleared column to the right of the illustration (illustration left + width + gap), centered within it */
+/* Sits over the illustration, in the clear space above the person's hand */
 .hero-drop-content {
   position: absolute;
   top: 24px; bottom: 160px;
-  left: calc(var(--space-6) + 558px + var(--space-6));
+  left: calc(var(--space-6) * 2);
   right: var(--space-6);
   display: flex; flex-direction: column; align-items: center; gap: var(--space-1);
 }
