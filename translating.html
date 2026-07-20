@@ -9,63 +9,26 @@
 </head>
 <body>
 
-<div class="translate-backdrop">
-  <div class="translate-card">
-    <div>
-      <span class="translate-filename">story_of_dorothy2026.pdf</span>
-      <h2>Translating to Easy Read</h2>
-    </div>
-    <div class="translate-stages" id="stages">
-      <div class="translate-stage" data-stage="0">
-        <div class="stage-dot stage-dot--active"></div>
-        <span>Uploading your file</span>
-      </div>
-      <div class="translate-stage" data-stage="1">
-        <div class="stage-dot stage-dot--pending"></div>
-        <span>Getting things ready</span>
-      </div>
-      <div class="translate-stage" data-stage="2">
-        <div class="stage-dot stage-dot--pending"></div>
-        <span>Translating your content into Easy Read</span>
-      </div>
-    </div>
-    <div class="translate-note">
-      <span>While you wait&hellip;</span>
-      <span>You can scroll through pages below.</span>
+<div class="translating-page">
+  <button class="icon-fab close" aria-label="Close" onclick="window.location.href='get-started.html'">
+    <img src="assets/icons/close.svg" alt="" width="20" height="20">
+  </button>
+  <button class="icon-fab" aria-label="More options" style="position:absolute; top:var(--space-4); right:88px;">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="2" cy="8" r="1.5" fill="#003B49"/><circle cx="8" cy="8" r="1.5" fill="#003B49"/><circle cx="14" cy="8" r="1.5" fill="#003B49"/></svg>
+  </button>
+
+  <div class="translating-card">
+    <div class="translating-content">
+      <h1 class="translating-heading">Translating to Easy Read&hellip;</h1>
+      <p class="translating-filename">story_of_dorothy2026.pdf</p>
+      <div class="translating-loader"><div class="translating-spinner"></div></div>
+      <button class="translating-cancel" onclick="window.location.href='get-started.html'">Cancel</button>
     </div>
   </div>
 </div>
 
 <script>
-  const rows = document.querySelectorAll('#stages .translate-stage');
-
-  function setStage(n) {
-    rows.forEach((row, i) => {
-      const dot = row.querySelector('.stage-dot');
-      dot.className = 'stage-dot';
-      if (i < n) {
-        dot.classList.add('stage-dot--done');
-        dot.innerHTML = '<img src="assets/icons/check.svg" alt="">';
-      } else if (i === n) {
-        dot.classList.add('stage-dot--active');
-      } else {
-        dot.classList.add('stage-dot--pending');
-      }
-    });
-  }
-
-  function tick(n) {
-    setTimeout(() => {
-      if (n < rows.length) {
-        setStage(n);
-        tick(n + 1);
-      } else {
-        window.location.href = 'ready.html';
-      }
-    }, 850);
-  }
-
-  tick(1);
+  setTimeout(() => { window.location.href = 'ready.html'; }, 2200);
 </script>
 
 </body>

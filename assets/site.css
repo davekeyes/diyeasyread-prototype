@@ -600,7 +600,7 @@
 .hero-drop-content .heading-accent { font-size: 32px; line-height: 44px; font-weight: 700; color: var(--button-base); }
 .hero-drop-content .caption { font-size: var(--fs-body-lg); line-height: var(--lh-body-lg); color: var(--fg-primary); }
 
-/* -------- Screen 1: Translating / Screen 2: Ready (shared backdrop) -------- */
+/* -------- Screen 2: Ready (shared backdrop) -------- */
 .translate-backdrop {
   min-height: 100vh;
   background: radial-gradient(526px 300px at 50% 45%, var(--sand-100) 0%, var(--sand-200) 100%);
@@ -610,27 +610,39 @@
   padding: var(--space-5);
   box-sizing: border-box;
 }
-.translate-card {
-  width: 640px; max-width: 100%;
-  border-radius: var(--radius-xl);
-  background: var(--sand-100);
-  box-shadow: 0 4px 32px rgba(0, 35, 43, 0.3);
-  padding: var(--space-7) var(--space-8);
-  display: flex; flex-direction: column; gap: var(--space-5);
+.ready-note span { font-size: 14px; line-height: 20px; color: var(--fg-secondary); }
+
+/* -------- Screen 1: Translating -------- */
+.translating-page {
+  min-height: 100vh;
+  background: var(--sand-200);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-6) var(--space-5);
   box-sizing: border-box;
 }
-.translate-filename, .ready-note span { font-size: 14px; line-height: 20px; color: var(--fg-secondary); }
-.translate-card h2 { font-size: 24px; line-height: 32px; font-weight: 600; color: var(--fg-primary); margin: var(--space-2) 0 0; }
-.translate-stages { display: flex; flex-direction: column; gap: var(--space-4); }
-.translate-stage { display: flex; flex-direction: row; align-items: center; gap: var(--space-4); }
-.translate-stage span { font-size: 18px; line-height: 24px; color: var(--fg-primary); }
-.stage-dot { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; box-sizing: border-box; }
-.stage-dot--done { background: var(--pounamu-200); display: flex; align-items: center; justify-content: center; }
-.stage-dot--done img { width: 16px; height: 16px; filter: brightness(0) saturate(100%) invert(24%) sepia(35%) saturate(700%) hue-rotate(70deg); }
-.stage-dot--active { border: 3px solid var(--bg-200); border-top-color: var(--fg-secondary); animation: diy-spin 900ms linear infinite; }
-.stage-dot--pending { border: 2px solid var(--sand-300); }
-.translate-note { border-top: 1px solid var(--sand-200); padding-top: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
-.translate-note span { font-size: 16px; line-height: 24px; color: var(--fg-secondary); }
+.translating-card {
+  position: relative;
+  width: 800px; max-width: 100%;
+  min-height: 312px;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-xl);
+  background: radial-gradient(400px 156px at 50% 50%, var(--sand-100) 0%, var(--sand-200) 100%);
+  padding: 0 34px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-sizing: border-box;
+}
+.translating-content { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+.translating-heading { font-size: 40px; line-height: 48px; font-weight: 700; color: var(--fg-primary); text-align: center; margin: 0; }
+.translating-filename { font-size: 24px; line-height: 32px; font-weight: 600; color: var(--fg-primary); margin: 0; padding: var(--space-2) 0; }
+.translating-loader { width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
+.translating-spinner { width: 48px; height: 48px; border-radius: 50%; border: 4px solid var(--bg-200); border-top-color: var(--fg-secondary); animation: diy-spin 900ms linear infinite; }
+.translating-cancel {
+  font-size: 18px; line-height: 24px; font-weight: 400; color: var(--fg-secondary);
+  text-decoration: underline; text-decoration-thickness: 8%;
+  background: none; border: none; font-family: inherit; cursor: pointer; padding: 0;
+}
 
 .ready-card {
   width: 752px; max-width: 100%;
@@ -822,7 +834,9 @@
   .hero-drop-content .heading-main { font-size: 36px; line-height: 40px; }
   .hero-drop-content .heading-sub, .hero-drop-content .heading-accent { font-size: 24px; line-height: 32px; }
 
-  .translate-card, .ready-card { padding: var(--space-5); }
+  .translating-card, .ready-card { padding: var(--space-5); }
+  .translating-heading { font-size: 32px; line-height: 40px; }
+  .translating-filename { font-size: 20px; line-height: 28px; }
 
   .doc-pages { padding: var(--space-5) var(--space-4); }
   .doc-page { width: 100%; height: auto; aspect-ratio: 800 / 1132; }

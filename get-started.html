@@ -40,7 +40,6 @@
       </p>
       <span class="caption">.docx or .pdf, up to 20pg or 50mb</span>
     </div>
-    <input type="file" id="file-input" accept=".doc,.docx,.pdf" style="display:none;">
   </div>
 </main>
 
@@ -56,12 +55,10 @@
 
 <script>
   const dz = document.getElementById('dropzone');
-  const fileInput = document.getElementById('file-input');
   function goToTranslating() { window.location.href = 'translating.html'; }
-  dz.addEventListener('click', () => fileInput.click());
+  dz.addEventListener('click', goToTranslating);
   dz.addEventListener('dragover', e => e.preventDefault());
   dz.addEventListener('drop', e => { e.preventDefault(); goToTranslating(); });
-  fileInput.addEventListener('change', () => { if (fileInput.files.length) goToTranslating(); });
 </script>
 
 </body>
