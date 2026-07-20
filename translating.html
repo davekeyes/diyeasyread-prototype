@@ -152,7 +152,7 @@
     <span>DIY Easy Read</span>
   </div>
 
-  <div class="ready-banner" id="ready-banner" hidden>
+  <div class="ready-banner" id="ready-banner">
     <div class="ready-banner-photo">
       <img src="assets/img/intro/ready-thumbsup.svg" alt="">
     </div>
@@ -167,7 +167,7 @@
 </div>
 
 <script>
-  setTimeout(() => { document.getElementById('ready-banner').hidden = false; }, 4000);
+  setTimeout(() => { document.getElementById('ready-banner').classList.add('visible'); }, 4000);
 </script>
 
 </body>

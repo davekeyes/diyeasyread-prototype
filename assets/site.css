@@ -649,19 +649,22 @@
 .translating-branding img { display: block; }
 .translating-branding span { font-size: 24px; line-height: 32px; font-weight: 600; color: var(--sand-400); }
 
-/* Fixed banner that appears once the (simulated) translation completes, letting the reader jump straight to the preview */
+/* Fixed banner that slides in from the top once the (simulated) translation completes, letting the reader jump straight to the preview without losing their scroll position */
 .ready-banner {
   position: fixed;
-  top: 0; left: 50%; transform: translateX(-50%);
+  top: 0; left: 50%;
+  transform: translateX(-50%) translateY(-100%);
+  transition: transform 480ms var(--ease-standard);
   width: 752px; max-width: calc(100% - 32px);
   background: var(--sand-100);
-  box-shadow: 0 4px 16px rgba(0, 35, 43, 0.3);
+  box-shadow: 0 4px 16px rgba(77, 72, 58, 0.5);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   padding: var(--space-6);
   display: flex; flex-direction: row; align-items: center; gap: var(--space-6);
   box-sizing: border-box;
   z-index: 15;
 }
+.ready-banner.visible { transform: translateX(-50%) translateY(0); }
 .ready-banner-photo { width: 192px; height: 192px; border-radius: var(--radius-sm); background: var(--sand-000); flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
 .ready-banner-photo img { width: 60%; height: 60%; object-fit: contain; }
 .ready-banner-content { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
