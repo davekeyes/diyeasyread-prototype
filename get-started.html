@@ -25,25 +25,18 @@
 </header>
 
 <main class="wrap">
-  <div class="dropzone" id="dropzone">
-    <img class="dropzone-art dropzone-art-left" src="assets/img/figma/asset-woman-thinking.png" alt="A woman with a thoughtful expression, presenting an open hand">
-    <div class="dropzone-content">
-      <img src="assets/icons/arrow-right.svg" alt="" class="dropzone-arrow" width="40" height="40" style="transform: rotate(90deg);">
-      <h2>Drop your doc here!</h2>
-      <p class="body-large">or tap to select a file</p>
-      <p class="body-small dropzone-caption">Word file or pdf up to 20pg, max 50MB</p>
-      <input type="file" id="file-input" accept=".doc,.docx,.pdf" style="display:none;">
+  <div class="hero-drop" id="dropzone">
+    <div class="hero-drop-illustration">
+      <img src="assets/img/diyer-addfile-illustration.svg" alt="An illustration of a person adding a file to translate">
     </div>
-    <img class="dropzone-art dropzone-art-right" src="assets/img/figma/asset-doc-stack.png" alt="A stack of blank document pages">
+    <div class="hero-drop-content">
+      <img src="assets/icons/arrow-right.svg" alt="" class="arrow" width="40" height="40">
+      <h1>Drop a file here</h1>
+      <h1 class="sub">to translate to Easy Read</h1>
+      <span class="caption">.docx or .pdf, up to 20pg or 50mb</span>
+    </div>
+    <input type="file" id="file-input" accept=".doc,.docx,.pdf" style="display:none;">
   </div>
-
-  <label class="auto-toggle">
-    <span class="toggle-switch">
-      <input type="checkbox" id="auto-translate">
-      <span class="toggle-track"><span class="toggle-knob"></span></span>
-    </span>
-    Translate docs automatically
-  </label>
 </main>
 
 <footer class="site-footer wrap">
@@ -59,10 +52,9 @@
 <script>
   const dz = document.getElementById('dropzone');
   const fileInput = document.getElementById('file-input');
-  dz.addEventListener('click', () => fileInput.click());
-  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
-  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
   function goToTranslating() { window.location.href = 'translating.html'; }
+  dz.addEventListener('click', () => fileInput.click());
+  dz.addEventListener('dragover', e => e.preventDefault());
   dz.addEventListener('drop', e => { e.preventDefault(); goToTranslating(); });
   fileInput.addEventListener('change', () => { if (fileInput.files.length) goToTranslating(); });
 </script>

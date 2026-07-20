@@ -9,42 +9,63 @@
 </head>
 <body>
 
-<div class="translating-page">
-  <div class="translating-watermark" aria-hidden="true">Translating</div>
-
-  <div class="translating-card">
-    <button class="translating-close" aria-label="Close" onclick="window.location.href='get-started.html'">
-      <img src="assets/icons/close.svg" alt="" width="20" height="20">
-    </button>
-    <img src="assets/img/logo-mark.png" alt="" class="translating-logo-mark" width="48" height="48">
-    <h2>Translating to Easy Read</h2>
-    <p class="body-large translating-filename">story_of_dorothy2026.pdf</p>
-    <a class="link" href="get-started.html">Cancel</a>
+<div class="translate-backdrop">
+  <div class="translate-card">
+    <div>
+      <span class="translate-filename">story_of_dorothy2026.pdf</span>
+      <h2>Translating to Easy Read</h2>
+    </div>
+    <div class="translate-stages" id="stages">
+      <div class="translate-stage" data-stage="0">
+        <div class="stage-dot stage-dot--active"></div>
+        <span>Uploading your file</span>
+      </div>
+      <div class="translate-stage" data-stage="1">
+        <div class="stage-dot stage-dot--pending"></div>
+        <span>Getting things ready</span>
+      </div>
+      <div class="translate-stage" data-stage="2">
+        <div class="stage-dot stage-dot--pending"></div>
+        <span>Translating your content into Easy Read</span>
+      </div>
+    </div>
+    <div class="translate-note">
+      <span>While you wait&hellip;</span>
+      <span>You can scroll through pages below.</span>
+    </div>
   </div>
-
-  <div class="skeleton-page-group">
-    <div class="skeleton-row"><div class="skeleton-thumb"></div><p class="body-large">Translation can take a few minutes.</p></div>
-    <div class="skeleton-row"><div class="skeleton-thumb"></div><p class="body-large">So, while you wait&hellip;</p></div>
-    <div class="skeleton-row"><div class="skeleton-thumb"></div><p class="body-large">You can scroll through pages below.</p></div>
-    <div class="skeleton-row"><div class="skeleton-thumb"></div><p class="body-large">To learn what DIY Easy Read can do.</p></div>
-    <p class="skeleton-page-number">1</p>
-  </div>
-
-  <div class="skeleton-page-group">
-    <div class="skeleton-row"><div class="skeleton-thumb"></div><p class="body-large">You can select a content block to edit it</p></div>
-    <div class="skeleton-row"><div class="skeleton-thumb"></div><p class="body-large">Swap in your own images any time</p></div>
-    <div class="skeleton-row"><div class="skeleton-thumb"></div><p class="body-large">Buy or subscribe to edit and download.</p></div>
-    <p class="skeleton-page-number">2</p>
-  </div>
-
-  <footer class="translating-footer">
-    <img src="assets/img/logo-mark.png" alt="" width="28" height="28">
-    <span>DIY Easy Read</span>
-  </footer>
 </div>
 
 <script>
-  setTimeout(() => { window.location.href = 'preview.html'; }, 4000);
+  const rows = document.querySelectorAll('#stages .translate-stage');
+
+  function setStage(n) {
+    rows.forEach((row, i) => {
+      const dot = row.querySelector('.stage-dot');
+      dot.className = 'stage-dot';
+      if (i < n) {
+        dot.classList.add('stage-dot--done');
+        dot.innerHTML = '<img src="assets/icons/check.svg" alt="">';
+      } else if (i === n) {
+        dot.classList.add('stage-dot--active');
+      } else {
+        dot.classList.add('stage-dot--pending');
+      }
+    });
+  }
+
+  function tick(n) {
+    setTimeout(() => {
+      if (n < rows.length) {
+        setStage(n);
+        tick(n + 1);
+      } else {
+        window.location.href = 'ready.html';
+      }
+    }, 850);
+  }
+
+  tick(1);
 </script>
 
 </body>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Easy Read translations — DIY Easy Read</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<div class="dashboard-page" id="dashboard-page">
+  <div class="dashboard-header">
+    <a class="logo" href="dashboard.html">
+      <img src="assets/img/logo-diyer.png" alt="DIY Easy Read, from Volition" style="height:44px; width:auto;">
+    </a>
+    <div style="position:relative;">
+      <button class="dashboard-account" id="account-toggle">
+        <span>davekeyes@volition.org.nz</span>
+        <img src="assets/icons/chevron-down.svg" alt="" width="16" height="16">
+      </button>
+      <div class="menu-dropdown" id="account-menu" hidden>
+        <div class="menu-item">
+          <img src="assets/icons/image.svg" alt="" width="16" height="16">
+          <span>Branding</span>
+        </div>
+        <div class="menu-item">
+          <img src="assets/icons/supervised-user.svg" alt="" width="16" height="16">
+          <span>Members</span>
+        </div>
+        <button class="menu-item is-action" id="dark-toggle">
+          <span class="dot"></span>
+          <span>Dark mode</span>
+        </button>
+        <a class="menu-item is-action" href="get-started.html">
+          <img src="assets/icons/logout.svg" alt="" width="16" height="16">
+          <span>Sign out</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-section-head">
+    <div>
+      <h1>Easy Read translations</h1>
+      <button class="dashboard-sort">
+        <span>Recent</span>
+        <img src="assets/icons/chevron-down.svg" alt="" width="16" height="16">
+      </button>
+    </div>
+    <a class="btn-new-translation" href="get-started.html">New translation</a>
+  </div>
+
+  <div class="translation-list">
+    <a class="translation-row" href="document.html">
+      <div class="translation-row-left">
+        <img src="assets/icons/article.svg" alt="" width="24" height="24">
+        <span>story_of_dorothy2026.pdf</span>
+      </div>
+      <div class="translation-row-right">
+        <span>340 KB &#8226; 5 pages</span>
+        <span>17 Jul 2026</span>
+      </div>
+    </a>
+    <a class="translation-row" href="document.html">
+      <div class="translation-row-left">
+        <img src="assets/icons/article.svg" alt="" width="24" height="24">
+        <span>benefit_review_letter.pdf</span>
+      </div>
+      <div class="translation-row-right">
+        <span>610 KB &#8226; 8 pages</span>
+        <span>2 Jul 2026</span>
+      </div>
+    </a>
+    <a class="translation-row" href="document.html">
+      <div class="translation-row-left">
+        <img src="assets/icons/article.svg" alt="" width="24" height="24">
+        <span>tenancy_renewal_notice.pdf</span>
+      </div>
+      <div class="translation-row-right">
+        <span>480 KB &#8226; 6 pages</span>
+        <span>24 Jun 2026</span>
+      </div>
+    </a>
+    <a class="translation-row" href="document.html">
+      <div class="translation-row-left">
+        <img src="assets/icons/article.svg" alt="" width="24" height="24">
+        <span>gp_referral_letter.pdf</span>
+      </div>
+      <div class="translation-row-right">
+        <span>290 KB &#8226; 4 pages</span>
+        <span>15 Jun 2026</span>
+      </div>
+    </a>
+    <a class="translation-row" href="document.html">
+      <div class="translation-row-left">
+        <img src="assets/icons/article.svg" alt="" width="24" height="24">
+        <span>power_of_attorney_summary.pdf</span>
+      </div>
+      <div class="translation-row-right">
+        <span>720 KB &#8226; 10 pages</span>
+        <span>3 Jun 2026</span>
+      </div>
+    </a>
+  </div>
+</div>
+
+<script>
+  const accountToggle = document.getElementById('account-toggle');
+  const accountMenu = document.getElementById('account-menu');
+  accountToggle.addEventListener('click', () => { accountMenu.hidden = !accountMenu.hidden; });
+  document.addEventListener('click', (e) => {
+    if (!accountToggle.contains(e.target) && !accountMenu.contains(e.target)) accountMenu.hidden = true;
+  });
+
+  const darkToggle = document.getElementById('dark-toggle');
+  const page = document.getElementById('dashboard-page');
+  darkToggle.addEventListener('click', () => page.classList.toggle('dark'));
+</script>
+
+</body>
+</html>

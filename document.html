@@ -3,24 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Preview — Dorothy's Story and Safety Questions</title>
+<title>story_of_dorothy2026.pdf — DIY Easy Read</title>
 <link rel="stylesheet" href="assets/colors_and_type.css">
 <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 
-<div class="preview-backdrop">
-  <span class="preview-watermark-big" aria-hidden="true">Preview</span>
-  <button class="icon-fab close" aria-label="Close" onclick="window.location.href='get-started.html'">
+<div class="doc-backdrop" id="doc-backdrop">
+  <button class="icon-fab close" aria-label="Close" onclick="window.location.href='dashboard.html'">
     <img src="assets/icons/close.svg" alt="" width="20" height="20">
   </button>
+  <div class="menu-anchor">
+    <button class="icon-fab" id="doc-menu-toggle" aria-label="More options">
+      <img src="assets/icons/settings.svg" alt="" width="20" height="20">
+    </button>
+    <div class="menu-dropdown doc-menu" id="doc-menu" hidden>
+      <div class="menu-item">
+        <img src="assets/icons/image.svg" alt="" width="16" height="16">
+        <span>Hide logo</span>
+      </div>
+      <div class="menu-item">
+        <img src="assets/icons/settings.svg" alt="" width="16" height="16">
+        <span>Styles</span>
+      </div>
+      <div class="menu-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3v13M7 11l5 5 5-5M5 21h14" stroke="#003B49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span>Download</span>
+      </div>
+      <div class="menu-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 01-1-1v-6a1 1 0 011-1h16a1 1 0 011 1v6a1 1 0 01-1 1h-2M6 14h12v7H6v-7z" stroke="#003B49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span>Print</span>
+      </div>
+      <button class="menu-item is-action" id="dark-toggle">
+        <span class="dot"></span>
+        <span>Dark mode</span>
+      </button>
+    </div>
+  </div>
 
   <div class="preview-head">
-    <h2>Here is your Easy Read preview</h2>
-    <div class="preview-head-cta">
-      <span>To edit, save or download:</span>
-      <a class="btn-signin-pill" href="dashboard.html">Sign up or sign in</a>
-    </div>
+    <span class="translate-filename">story_of_dorothy2026.pdf</span>
+    <h2>Your Easy Read pages</h2>
   </div>
 
   <div class="doc-pages">
@@ -199,12 +222,20 @@
     </div>
 
   </div>
-
-  <div class="preview-footer-cta">
-    <p>Do you like this preview? Would you like to edit, save or download?</p>
-    <a class="btn-buy-subscribe" href="dashboard.html">Buy or subscribe</a>
-  </div>
 </div>
+
+<script>
+  const menuToggle = document.getElementById('doc-menu-toggle');
+  const menu = document.getElementById('doc-menu');
+  menuToggle.addEventListener('click', () => { menu.hidden = !menu.hidden; });
+  document.addEventListener('click', (e) => {
+    if (!menuToggle.contains(e.target) && !menu.contains(e.target)) menu.hidden = true;
+  });
+
+  const darkToggle = document.getElementById('dark-toggle');
+  const backdrop = document.getElementById('doc-backdrop');
+  darkToggle.addEventListener('click', () => backdrop.classList.toggle('dark'));
+</script>
 
 </body>
 </html>
