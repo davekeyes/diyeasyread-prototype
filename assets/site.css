@@ -44,6 +44,12 @@
   line-height: var(--lh-body-lg);
   font-weight: var(--font-weight-regular);
 }
+
+.nav-actions .link {
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-body-lg);
+  font-weight: var(--font-weight-regular);
+}
 .main-nav a:hover { color: var(--accent-primary); }
 .main-nav a[aria-current="page"] { color: var(--accent-primary); }
 
