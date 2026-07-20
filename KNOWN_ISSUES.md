@@ -10,6 +10,7 @@ Running list of things we've flagged but intentionally punted on while working t
 
 - [ ] **`get-started.html` dropzone**: clicking anywhere on the "Drop a file here" panel currently moves straight to `translating.html`. Real behavior should be triggered by an actual drag-and-drop file drop, or a click that opens a file picker and only advances once a file is selected — deferred per Dave, 2026-07-20.
 - [ ] **`translating.html` "Ready" banner destination**: per the Figma design (node 428:6661), once the simulated translation completes, a fixed "Your Easy Read preview is ready!" banner appears and its "View preview" button links straight to `preview.html`, bypassing `ready.html` entirely. That may mean `ready.html` (the separate confirmation page, built earlier in this flow) is no longer part of the real intended path — needs Dave's confirmation on whether to keep `ready.html` reachable some other way or fold/remove it.
+- [ ] **`translating.html` "Ready" banner arrival trigger**: currently a 14s timer (plus click-anywhere-to-reveal early). Dave is considering dropping the timer-based arrival entirely — revisit once decided.
 
 ## Fidelity gaps to double-check
 
