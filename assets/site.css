@@ -551,19 +551,22 @@
   box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   gap: var(--space-6);
   cursor: pointer;
   min-height: 408px;
   overflow: hidden;
   margin-top: var(--space-4);
+  margin-left: calc(-1 * var(--space-5));
+  margin-right: calc(-1 * var(--space-5));
+  width: calc(100% + var(--space-5) * 2);
   padding: 0 var(--space-6);
   box-sizing: border-box;
 }
-.hero-drop-illustration { width: 260px; height: 380px; flex-shrink: 0; align-self: flex-end; }
+.hero-drop-illustration { width: 558px; height: 408px; flex-shrink: 0; align-self: flex-end; }
 .hero-drop-illustration img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.hero-drop-content { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding-bottom: 56px; }
+.hero-drop-content { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
 .hero-drop-content .arrow { width: 40px; height: 40px; margin-bottom: var(--space-2); }
 .hero-drop-content h1 { font-size: 60px; line-height: 48px; font-weight: 600; color: var(--fg-primary); text-align: center; margin: 0; letter-spacing: -0.01em; }
 .hero-drop-content h1.sub { font-size: 38px; margin-top: var(--space-2); }
