@@ -555,7 +555,7 @@
   background: linear-gradient(rgba(250, 249, 247, 0.5), rgba(250, 249, 247, 0.5)), linear-gradient(var(--sand-100), var(--sand-100));
   box-shadow: inset 0 0 0 1px rgba(0, 35, 43, 0.3);
 }
-.content-row-photo { width: 192px; height: 192px; border-radius: var(--radius-sm); flex-shrink: 0; object-fit: cover; display: block; }
+.content-row-photo { width: 192px; height: 192px; border-radius: var(--radius-sm); flex-shrink: 0; object-fit: cover; display: block; background: #FFFFFF; }
 .content-row-photo--placeholder { background: var(--sand-100); border: 1px solid var(--sand-200); box-sizing: border-box; }
 /* Full-figure character illustrations need to show the whole figure, not a tight photographic crop */
 .content-row-photo--illustration { object-fit: contain; }
