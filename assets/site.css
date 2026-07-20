@@ -559,6 +559,9 @@
 .content-row-photo--placeholder { background: var(--sand-100); border: 1px solid var(--sand-200); box-sizing: border-box; }
 /* Full-figure character illustrations need to show the whole figure, not a tight photographic crop */
 .content-row-photo--illustration { object-fit: contain; }
+.content-row-photo--contain { object-fit: contain; }
+/* Slightly smaller and pinned to the bottom of the frame rather than centered */
+.content-row-photo--anchored-bottom { object-fit: contain; object-position: center bottom; padding-top: 14px; box-sizing: border-box; }
 .content-row-text { font-size: 24px; line-height: 32px; color: var(--fg-primary); flex: 1; margin: 0; }
 .content-row-text-group, .content-row-text-lines { display: flex; flex-direction: column; gap: var(--space-4); justify-content: center; flex: 1; height: 192px; box-sizing: border-box; }
 .content-row-text-group p, .content-row-text-lines p { font-size: 24px; line-height: 32px; color: var(--fg-primary); margin: 0; }
