@@ -40,7 +40,9 @@
 .main-nav a {
   text-decoration: none;
   color: var(--fg-primary);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-body-lg);
+  font-weight: var(--font-weight-regular);
 }
 .main-nav a:hover { color: var(--accent-primary); }
 .main-nav a[aria-current="page"] { color: var(--accent-primary); }
@@ -62,7 +64,7 @@
   border-radius: var(--radius-pill);
   font-weight: var(--font-weight-semibold);
   font-size: var(--fs-body-lg);
-  line-height: 32px;
+  line-height: var(--lh-body-lg);
   text-decoration: none;
   border: 2px solid transparent;
   cursor: pointer;
