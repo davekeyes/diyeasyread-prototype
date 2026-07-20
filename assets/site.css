@@ -26,6 +26,12 @@
 }
 .logo img { width: 283px; height: 75px; }
 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
 .main-nav {
   display: flex;
   align-items: center;
