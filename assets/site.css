@@ -564,7 +564,7 @@
 .hero-drop-illustration { width: 260px; height: 380px; flex-shrink: 0; align-self: flex-end; }
 .hero-drop-illustration img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .hero-drop-content { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding-bottom: 56px; }
-.hero-drop-content .arrow { width: 40px; height: 40px; transform: rotate(90deg); margin-bottom: var(--space-2); }
+.hero-drop-content .arrow { width: 40px; height: 40px; margin-bottom: var(--space-2); }
 .hero-drop-content h1 { font-size: 60px; line-height: 48px; font-weight: 600; color: var(--fg-primary); text-align: center; margin: 0; letter-spacing: -0.01em; }
 .hero-drop-content h1.sub { font-size: 38px; margin-top: var(--space-2); }
 .hero-drop-content .caption { font-size: var(--fs-body-lg); line-height: var(--lh-body-lg); color: var(--fg-primary); }
