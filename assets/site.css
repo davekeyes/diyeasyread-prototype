@@ -7,7 +7,7 @@
 * { box-sizing: border-box; }
 
 .wrap {
-  max-width: 1120px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 0 var(--space-5);
 }
@@ -24,7 +24,7 @@
   align-items: center;
   gap: var(--space-2);
 }
-.logo img { height: 40px; width: auto; }
+.logo img { width: 283px; height: 75px; }
 
 .main-nav {
   display: flex;
@@ -42,7 +42,7 @@
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-5);
+  gap: var(--space-6);
 }
 
 /* -------- Buttons -------- */
@@ -675,7 +675,7 @@
   min-height: 48px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
 }
 
-.doc-pages { position: relative; display: flex; flex-direction: column; gap: var(--space-6); align-items: center; padding: var(--space-5) var(--space-10); box-sizing: border-box; width: 100%; }
+.doc-pages { position: relative; display: flex; flex-direction: column; gap: var(--space-6); align-items: center; max-width: 980px; margin: 0 auto; padding: var(--space-5) var(--space-5); box-sizing: border-box; width: 100%; }
 
 .doc-page {
   position: relative;
@@ -752,10 +752,10 @@
 }
 
 /* -------- Screen 4: Dashboard -------- */
-.dashboard-page { min-height: 100vh; background: var(--sand-100); padding: 0 var(--space-10) var(--space-9); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-6); color: var(--fg-primary); }
+.dashboard-page { min-height: 100vh; background: var(--sand-100); color: var(--fg-primary); }
 .dashboard-page.dark { background: var(--teal-900); color: var(--sand-000); }
+.dashboard-page .wrap { display: flex; flex-direction: column; gap: var(--space-6); padding-bottom: var(--space-9); box-sizing: border-box; }
 .dashboard-header { padding: var(--space-6) 0; display: flex; flex-direction: row; justify-content: space-between; align-items: center; }
-.dashboard-header .logo img { height: 44px; width: auto; }
 .dashboard-account { position: relative; display: flex; flex-direction: row; align-items: center; gap: var(--space-3); cursor: pointer; background: none; border: none; font-family: inherit; }
 .dashboard-account span { font-size: 16px; line-height: 24px; color: inherit; }
 .dashboard-section-head { display: flex; flex-direction: row; justify-content: space-between; align-items: center; border-top: 1px solid var(--borders); border-bottom: 1px solid var(--borders); padding: var(--space-4) 0; }
@@ -803,7 +803,6 @@
   .edit-btn { position: static; opacity: 1; pointer-events: auto; margin-top: var(--space-2); }
   .preview-watermark-big { font-size: 96px; top: 100px; }
 
-  .dashboard-page { padding: 0 var(--space-5) var(--space-6); }
   .dashboard-section-head h1 { font-size: 28px; line-height: 36px; }
   .translation-row-right { gap: var(--space-3); }
 }
