@@ -6,6 +6,10 @@ Running list of things we've flagged but intentionally punted on while working t
 
 - [ ] **Responsive/mobile view is bad** across the walkthrough (`get-started.html` at minimum, likely the rest of the flow too). Deferred until the desktop flow is fully sorted.
 
+## Behavior
+
+- [ ] **`get-started.html` dropzone**: clicking anywhere on the "Drop a file here" panel currently moves straight to `translating.html`. Real behavior should be triggered by an actual drag-and-drop file drop, or a click that opens a file picker and only advances once a file is selected — deferred per Dave, 2026-07-20.
+
 ## Assets
 
 - [ ] `assets/diyer_footer_logo.svg` — a subtle sand-tinted decorative mark, looks built for the footer band, which currently has no logo. Not wired in anywhere yet.
