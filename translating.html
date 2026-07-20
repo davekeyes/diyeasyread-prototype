@@ -167,7 +167,16 @@
 </div>
 
 <script>
-  setTimeout(() => { document.getElementById('ready-banner').classList.add('visible'); }, 4000);
+  const readyBanner = document.getElementById('ready-banner');
+  function showReadyBanner() { readyBanner.classList.add('visible'); }
+
+  const readyTimer = setTimeout(showReadyBanner, 14000);
+
+  // Let a click anywhere bring the banner in early, instead of waiting out the timer
+  document.addEventListener('click', () => {
+    clearTimeout(readyTimer);
+    showReadyBanner();
+  }, { once: true });
 </script>
 
 </body>

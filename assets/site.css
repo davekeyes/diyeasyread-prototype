@@ -408,7 +408,7 @@
 .ready-banner {
   position: fixed;
   top: 0; left: 50%;
-  transform: translateX(-50%) translateY(-100%);
+  transform: translateX(-50%) translateY(calc(-100% - var(--space-6)));
   transition: transform 480ms var(--ease-standard);
   width: 752px; max-width: calc(100% - 32px);
   background: var(--sand-100);
