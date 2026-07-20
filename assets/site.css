@@ -555,7 +555,7 @@
   justify-content: center;
   gap: var(--space-6);
   cursor: pointer;
-  min-height: 408px;
+  min-height: 432px;
   overflow: hidden;
   margin-top: var(--space-4);
   margin-left: calc(-1 * var(--space-5));
@@ -564,12 +564,23 @@
   padding: 0 var(--space-6);
   box-sizing: border-box;
 }
-.hero-drop-illustration { width: 558px; height: 408px; flex-shrink: 0; align-self: flex-end; }
+/* Positioned out of flow so its width/presence never shifts the text block */
+.hero-drop-illustration { position: absolute; top: var(--space-5); left: var(--space-6); width: 558px; height: 408px; }
 .hero-drop-illustration img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.hero-drop-content { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
-.hero-drop-content .arrow { width: 40px; height: 40px; margin-bottom: var(--space-2); }
-.hero-drop-content h1 { font-size: 60px; line-height: 48px; font-weight: 600; color: var(--fg-primary); text-align: center; margin: 0; letter-spacing: -0.01em; }
-.hero-drop-content h1.sub { font-size: 38px; margin-top: var(--space-2); }
+/* Occupies the cleared column to the right of the illustration (illustration left + width + gap), centered within it */
+.hero-drop-content {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: calc(var(--space-6) + 558px + var(--space-6));
+  right: var(--space-6);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2);
+}
+.hero-drop-content .arrow { width: 64px; height: 64px; }
+.hero-drop-content .lead-in { font-size: 24px; line-height: 32px; font-weight: 400; color: var(--fg-primary); text-align: center; margin: 0; }
+.hero-drop-content .heading { margin: 0; text-align: center; }
+.hero-drop-content .heading-main { font-size: 52px; line-height: 48px; font-weight: 600; color: var(--fg-primary); }
+.hero-drop-content .heading-sub { font-size: 32px; line-height: 44px; font-weight: 500; color: var(--fg-primary); }
+.hero-drop-content .heading-accent { font-size: 32px; line-height: 44px; font-weight: 700; color: var(--button-base); }
 .hero-drop-content .caption { font-size: var(--fs-body-lg); line-height: var(--lh-body-lg); color: var(--fg-primary); }
 
 /* -------- Screen 1: Translating / Screen 2: Ready (shared backdrop) -------- */
@@ -788,10 +799,11 @@
   .dropzone-art-left { align-self: center; margin-bottom: 0; }
 
   .hero-drop { flex-direction: column; padding: var(--space-6) var(--space-5); min-height: 0; }
-  .hero-drop-illustration { width: 180px; height: 260px; }
-  .hero-drop-content { padding-bottom: 0; padding-top: var(--space-4); }
-  .hero-drop-content h1 { font-size: 36px; line-height: 40px; }
-  .hero-drop-content h1.sub { font-size: 24px; line-height: 32px; }
+  .hero-drop-illustration { position: static; top: auto; left: auto; width: 180px; height: 260px; }
+  .hero-drop-content { position: static; top: auto; bottom: auto; left: auto; right: auto; padding-top: var(--space-4); }
+  .hero-drop-content .arrow { width: 40px; height: 40px; }
+  .hero-drop-content .heading-main { font-size: 36px; line-height: 40px; }
+  .hero-drop-content .heading-sub, .hero-drop-content .heading-accent { font-size: 24px; line-height: 32px; }
 
   .translate-card, .ready-card { padding: var(--space-5); }
 
