@@ -9,6 +9,12 @@ Running list of things we've flagged but intentionally punted on while working t
 ## Behavior
 
 - [ ] **`get-started.html` dropzone**: clicking anywhere on the "Drop a file here" panel currently moves straight to `translating.html`. Real behavior should be triggered by an actual drag-and-drop file drop, or a click that opens a file picker and only advances once a file is selected — deferred per Dave, 2026-07-20.
+- [ ] **`translating.html` "Ready" banner destination**: per the Figma design (node 428:6661), once the simulated translation completes, a fixed "Your Easy Read preview is ready!" banner appears and its "View preview" button links straight to `preview.html`, bypassing `ready.html` entirely. That may mean `ready.html` (the separate confirmation page, built earlier in this flow) is no longer part of the real intended path — needs Dave's confirmation on whether to keep `ready.html` reachable some other way or fold/remove it.
+
+## Fidelity gaps to double-check
+
+- [ ] `translating.html`'s intro-page definition callout ("Preview means it will be read-only…") uses the real 💡 emoji character per its Figma node (428:6661), but `preview.html`/`document.html`'s definition callouts (built earlier from the unverified `.dc.html` handoff) use an SVG lightbulb icon instead. Worth checking preview.html's callouts against Figma directly rather than assuming the SVG version is correct.
+- [ ] `translating.html`'s "Learn what you can do with DIY Easy Read" row (page 1) is simplified — Figma layers a background rectangle + small muted logomark badge + the person illustration; only the person illustration was used here.
 
 ## Assets
 
