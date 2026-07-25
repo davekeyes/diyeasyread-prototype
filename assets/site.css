@@ -472,7 +472,9 @@
 .preview-watermark-big {
   position: fixed; left: 0; top: 50%; width: 100%;
   transform: translateY(-50%);
-  text-align: center; font-size: 320px; line-height: 100%; font-weight: 700;
+  text-align: center;
+  /* 24.84vw renders the word "Preview" (Outfit Bold) at ~92% of the viewport width, measured empirically */
+  font-size: 24.84vw; line-height: 100%; font-weight: 700;
   color: #4D483A; opacity: 0.08; pointer-events: none; white-space: nowrap;
   z-index: 50;
 }
@@ -643,7 +645,6 @@
   .content-row-photo { width: 96px; height: 96px; }
   .content-row-text-group { height: auto; align-items: center; }
   .edit-btn { position: static; opacity: 1; pointer-events: auto; margin-top: var(--space-2); }
-  .preview-watermark-big { font-size: 96px; }
 
   .dashboard-section-head h1 { font-size: 28px; line-height: 36px; }
   .translation-row-right { gap: var(--space-3); }
