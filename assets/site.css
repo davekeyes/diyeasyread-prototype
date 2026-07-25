@@ -523,8 +523,8 @@
 .doc-cover { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-5); align-self: stretch; padding-top: var(--space-6); box-sizing: border-box; min-height: 0; width: 100%; }
 .doc-cover .doc-logo { height: 40px; width: auto; flex-shrink: 0; }
 .doc-cover-title { font-size: 64px; line-height: 1.15; font-weight: 700; color: var(--fg-primary); margin: 0 var(--space-6); flex-shrink: 0; }
-.doc-cover-art { width: 100%; flex: 1; border-radius: var(--radius-lg); background: var(--sand-000); display: flex; align-items: center; justify-content: center; min-height: 0; padding: var(--space-4); box-sizing: border-box; }
-.doc-cover-art img { width: 100%; height: 100%; object-fit: contain; }
+.doc-cover-art { width: 100%; border-radius: var(--radius-lg); background: var(--sand-000); display: flex; align-items: center; justify-content: center; padding: var(--space-4); box-sizing: border-box; }
+.doc-cover-art img { width: 100%; height: auto; display: block; }
 .doc-cover-intro { display: flex; flex-direction: column; gap: var(--space-2); flex-shrink: 0; width: calc(100% - 64px); margin: 0 var(--space-6); box-sizing: border-box; }
 .doc-cover-intro p { font-size: 28px; line-height: 36px; color: var(--fg-primary); margin: 0; }
 
