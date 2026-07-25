@@ -549,12 +549,14 @@
 
 .content-row {
   position: relative;
-  width: 736px; max-width: 100%; height: 224px; flex-shrink: 0;
+  width: 736px; max-width: 100%; min-height: 224px; flex-shrink: 0;
   border-radius: var(--radius-lg); background: var(--sand-000);
   display: flex; flex-direction: row; gap: var(--space-6); padding: var(--space-4);
+  /* Centered by default; .content-row--top (JS-toggled, see content-blocks.js) switches to top-aligned once the text is taller than the 192px photo */
   align-items: center; justify-content: center; box-sizing: border-box;
   transition: box-shadow var(--dur-base) var(--ease-standard), background var(--dur-base) var(--ease-standard);
 }
+.content-row--top { align-items: flex-start; }
 .content-row:hover {
   background: linear-gradient(rgba(250, 249, 247, 0.5), rgba(250, 249, 247, 0.5)), linear-gradient(var(--sand-100), var(--sand-100));
   box-shadow: inset 0 0 0 1px rgba(0, 35, 43, 0.3);
@@ -567,7 +569,8 @@
 /* Slightly smaller and pinned to the bottom of the frame rather than centered */
 .content-row-photo--anchored-bottom { object-fit: contain; object-position: center bottom; padding-top: 14px; box-sizing: border-box; }
 .content-row-text { font-size: 24px; line-height: 32px; color: var(--fg-primary); flex: 1; margin: 0; }
-.content-row-text-group, .content-row-text-lines { display: flex; flex-direction: column; gap: var(--space-4); justify-content: center; flex: 1; height: 192px; box-sizing: border-box; }
+.content-row-text-group, .content-row-text-lines { display: flex; flex-direction: column; gap: var(--space-4); justify-content: center; flex: 1; min-height: 192px; box-sizing: border-box; }
+.content-row--top .content-row-text-group, .content-row--top .content-row-text-lines { justify-content: flex-start; }
 .content-row-text-group p, .content-row-text-lines p { font-size: 24px; line-height: 32px; color: var(--fg-primary); margin: 0; }
 /* #C5DFE0 is a one-off teal wash for this callout, not a named token — see handoff README */
 .content-definition { border-radius: var(--radius-sm); background: #C5DFE0; display: flex; flex-direction: row; gap: var(--space-2); padding: var(--space-3); align-items: flex-start; box-sizing: border-box; }
@@ -641,7 +644,7 @@
   .doc-cover-title { font-size: 36px; margin: 0 var(--space-4); }
   .doc-cover-intro { width: calc(100% - 32px); margin: 0 var(--space-4); }
   .doc-cover-intro p, .content-row-text, .content-row-text-group p { font-size: 18px; line-height: 26px; }
-  .content-row { width: 100%; height: auto; flex-direction: column; text-align: center; padding: var(--space-5); }
+  .content-row, .content-row--top { width: 100%; height: auto; flex-direction: column; align-items: center; text-align: center; padding: var(--space-5); }
   .content-row-photo { width: 96px; height: 96px; }
   .content-row-text-group { height: auto; align-items: center; }
   .edit-btn { position: static; opacity: 1; pointer-events: auto; margin-top: var(--space-2); }
