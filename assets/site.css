@@ -537,6 +537,7 @@
 .between-section { height: 40px; align-self: stretch; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .add-btn {
   width: 32px; height: 32px; border-radius: var(--radius-pill); background: transparent;
+  border: 0; font-family: inherit;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   opacity: 0; pointer-events: none;
   transition: opacity var(--dur-base) var(--ease-standard), background var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
@@ -544,8 +545,10 @@
 /* Hovering a content-row also reveals the "+" on its neighbouring between-section bars, never a duplicate on the row itself */
 .between-section:hover .add-btn,
 .content-row:hover + .between-section .add-btn,
-.between-section:has(+ .content-row:hover) .add-btn { opacity: 1; pointer-events: auto; }
+.between-section:has(+ .content-row:hover) .add-btn,
+.add-btn:focus-visible { opacity: 1; pointer-events: auto; }
 .add-btn:hover { background: var(--sand-100); box-shadow: inset 0 0 0 1px rgba(0, 35, 43, 0.3); }
+.add-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 .content-row {
   position: relative;
@@ -583,13 +586,17 @@
 
 .edit-btn {
   position: absolute; top: var(--space-4); right: var(--space-4);
+  border: 0; font-family: inherit;
   opacity: 0; pointer-events: none; transition: opacity var(--dur-base) var(--ease-standard);
   display: inline-flex; align-items: center; gap: var(--space-2); height: 40px;
   border-radius: var(--radius-pill); background: var(--sand-100);
   box-shadow: inset 0 0 0 1px rgba(0, 35, 43, 0.3);
   padding: var(--space-2) var(--space-4) var(--space-2) 20px; box-sizing: border-box; cursor: pointer;
 }
-.content-row:hover .edit-btn { opacity: 1; pointer-events: auto; }
+.content-row:hover .edit-btn,
+.content-row:focus-within .edit-btn,
+.edit-btn:focus-visible { opacity: 1; pointer-events: auto; }
+.edit-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .edit-btn span { font-size: 20px; line-height: 28px; font-weight: 600; color: var(--fg-primary); white-space: nowrap; }
 
 .preview-footer-cta { position: relative; display: flex; flex-direction: column; gap: var(--space-4); align-items: center; padding-top: var(--space-4); text-align: center; }
@@ -599,6 +606,69 @@
   padding: var(--space-3) var(--space-6); font-family: inherit; font-size: 24px; line-height: 32px; font-weight: 500;
   min-height: 64px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
 }
+
+/* -------- Content block editor -------- */
+.dialog {
+  background: var(--bg-100); color: var(--fg-primary);
+  border: none; border-radius: var(--radius-lg); box-shadow: var(--elev-3);
+  padding: var(--space-6); box-sizing: border-box;
+  width: 640px; max-width: calc(100% - var(--space-6)); max-height: calc(100% - var(--space-8));
+  overflow-y: auto;
+}
+.dialog::backdrop { background: rgba(0, 35, 43, 0.5); }
+.dialog .icon-fab.close { position: absolute; top: var(--space-4); right: var(--space-4); }
+.dialog-title { font-size: 28px; line-height: 36px; font-weight: 600; color: var(--fg-primary); margin: 0 56px var(--space-5) 0; }
+.dialog-actions {
+  display: flex; justify-content: flex-end; gap: var(--space-3);
+  margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--divider-default);
+}
+
+.editor-tablist { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-5); }
+.editor-tab {
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill);
+  border: 2px solid var(--borders); background: transparent; color: var(--fg-primary);
+  font-family: inherit; font-size: var(--fs-body-lg); line-height: var(--lh-body-lg); font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+.editor-tab[aria-selected="true"] { background: var(--bg-800); color: var(--text-inverted); border-color: var(--bg-800); }
+.editor-tab:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+
+.editor-panel { display: flex; flex-direction: column; gap: var(--space-5); }
+.editor-panel[hidden] { display: none; }
+
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.field-label { font-size: var(--fs-body-lg); line-height: var(--lh-body-lg); font-weight: var(--font-weight-semibold); color: var(--fg-primary); }
+.field-hint { font-size: 18px; line-height: 24px; color: var(--fg-secondary); margin: 0; }
+.field-input, .editor-contenteditable {
+  font-family: inherit; font-size: 20px; line-height: 28px; font-weight: var(--font-weight-regular);
+  padding: var(--space-3) var(--space-4); box-sizing: border-box; width: 100%;
+  border: 2px solid var(--teal-400); border-radius: 10px;
+  background: var(--sand-000); color: var(--fg-primary);
+}
+.field-input:focus, .editor-contenteditable:focus {
+  outline: 2px solid var(--focus); outline-offset: 4px; border-color: var(--teal-400);
+}
+.editor-contenteditable { min-height: 96px; }
+.editor-contenteditable strong { font-weight: 700; }
+
+.editor-toolbar { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+
+.editor-image-current { width: 160px; height: 160px; border-radius: var(--radius-sm); object-fit: cover; background: var(--sand-000); display: block; }
+.editor-image-grid { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.editor-image-thumb {
+  width: 96px; height: 96px; border-radius: var(--radius-sm); overflow: hidden; padding: 0;
+  border: 2px solid var(--borders); background: var(--sand-000); cursor: pointer;
+}
+.editor-image-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.editor-image-thumb[aria-pressed="true"] { border-color: var(--bg-800); box-shadow: inset 0 0 0 2px var(--bg-800); }
+.editor-image-thumb:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+.editor-upload-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+
+.editor-explanation-list { display: flex; flex-direction: column; gap: var(--space-4); }
+.editor-explanation-item { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-sm); background: var(--sand-100); box-sizing: border-box; }
+.editor-explanation-term { font-size: 18px; line-height: 24px; font-weight: var(--font-weight-semibold); color: var(--fg-primary); }
+.editor-explanation-remove { align-self: flex-end; }
+.editor-empty-hint { font-size: 18px; line-height: 24px; color: var(--fg-secondary); font-style: italic; margin: 0; }
 
 /* -------- Screen 4: Dashboard -------- */
 .dashboard-page { min-height: 100vh; background: var(--sand-100); color: var(--fg-primary); }
