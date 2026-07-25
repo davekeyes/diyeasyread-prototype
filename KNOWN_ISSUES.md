@@ -14,7 +14,6 @@ Running list of things we've flagged but intentionally punted on while working t
 
 ## Fidelity gaps to double-check
 
-- [ ] `translating.html`'s intro-page definition callout ("Preview means it will be read-only…") uses the real 💡 emoji character per its Figma node (428:6661), but `preview.html`/`document.html`'s definition callouts (built earlier from the unverified `.dc.html` handoff) use an SVG lightbulb icon instead. Worth checking preview.html's callouts against Figma directly rather than assuming the SVG version is correct.
 - [ ] `translating.html`'s "Learn what you can do with DIY Easy Read" row (page 1) is simplified — Figma layers a background rectangle + small muted logomark badge + the person illustration; only the person illustration was used here.
 
 ## Assets
