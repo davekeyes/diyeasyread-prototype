@@ -6,6 +6,9 @@
 function layoutContentRows() {
   const PHOTO_HEIGHT = 192;
   document.querySelectorAll('.content-row').forEach((row) => {
+    // Heading/sub-heading rows have no photo to compare text height against — this rule
+    // doesn't apply to them.
+    if (row.classList.contains('content-row--heading') || row.classList.contains('content-row--subheading')) return;
     const textEl = row.querySelector('.content-row-text, .content-row-text-group, .content-row-text-lines');
     if (!textEl) return;
     row.classList.toggle('content-row--top', textEl.scrollHeight > PHOTO_HEIGHT);
@@ -96,23 +99,32 @@ function repaginateContentPages() {
 
   const buckets = [[]];
   let rowHeightSoFar = 0;
+  let totalHeightSoFar = 0;
   groups.forEach((group) => {
     const rowEl = group.find((el) => el.matches('.content-row'));
     const rowHeight = rowEl ? rowEl.getBoundingClientRect().height : 0;
+    const groupHeight = group.reduce((sum, el) => sum + el.getBoundingClientRect().height, 0);
 
-    // Only rows count toward a page's capacity — between-sections (leading or trailing,
-    // synthesized or natural) always tag along for free, since they're safe to sit in the
-    // reserved page-number margin regardless of which page they land on. Counting a
-    // between-section's height here would shrink a page's real row budget depending on
-    // whether it happens to start with one, which is exactly what made the first content
-    // page (the only one whose leading spacer isn't synthesized after the fact) fit one
-    // fewer row than every other page for no visible reason.
-    if (rowHeight > 0 && rowHeightSoFar > 0 && rowHeightSoFar + rowHeight > rowCapacity) {
+    // Two thresholds, checked together. (1) Rows alone must stay within rowCapacity, which
+    // already excludes the page-number margin — a between-section's own height never counts
+    // against this, since a single spacer is safe to sit in that reserved margin regardless
+    // of which page it lands on (counting it here is what made the first content page fit
+    // one fewer row than every other page, for no visible reason). (2) But spacers still
+    // take up real, physical space on the page, and a shorter row (e.g. an image-less
+    // heading) can free up enough of the row budget to let an *entire extra [row, between]
+    // group* squeeze in — at which point the accumulated "free" spacer weight is no longer
+    // one small margin overrun, it's real overflow past the page's actual height. totalHeight
+    // is the hard ceiling that catches that case.
+    const rowWouldExceedRowCapacity = rowHeight > 0 && rowHeightSoFar > 0 && rowHeightSoFar + rowHeight > rowCapacity;
+    const totalWouldExceedFullHeight = totalHeightSoFar > 0 && totalHeightSoFar + groupHeight > fullHeight;
+    if (rowWouldExceedRowCapacity || totalWouldExceedFullHeight) {
       buckets.push([]);
       rowHeightSoFar = 0;
+      totalHeightSoFar = 0;
     }
     buckets[buckets.length - 1].push(...group);
     rowHeightSoFar += rowHeight;
+    totalHeightSoFar += groupHeight;
   });
 
   // Every non-first page needs its own leading spacer — it's both the "+" control at that

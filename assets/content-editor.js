@@ -1,19 +1,16 @@
-// Content block editor: Text / Image / Explanation dialog for .content-row blocks in document.html.
+// Content block editor: in-page inline editing for .content-row blocks (text/heading/
+// subheading rows), plus an add-block menu and an image-picker popover. Loaded by pages that
+// allow editing (document.html; translating.html in a later pass) — never by preview.html,
+// which stays structurally read-only by simply not loading this file.
+//
 // Data model per block, persisted to localStorage on Save:
-//   {
-//     id, image: {src, alt}, explanations: [{term, definition}], updatedAt,
-//     paragraphs: [
-//       { type: 'p', text, boldRanges: [[start,end], ...] } |
-//       { type: 'ul', items: [{ text, boldRanges }, ...] }
-//     ]
-//   }
-// boldRanges are character offsets into a unit's own `text` marking defined terms — kept
-// separate from the text itself (rather than inline markup) so there's nothing to parse at
-// render time and no risk of literal markdown characters leaking into the editor.
+//   Text row:    { id, type: 'text', paragraphs: [...], image: {src, alt}, explanations: [...], updatedAt }
+//   Heading row: { id, type: 'heading' | 'subheading', text, updatedAt }
+// paragraphs: [{ type:'p', text, boldRanges:[[start,end],...] } | { type:'ul', items:[{text,boldRanges}] }]
+// boldRanges are character offsets into a unit's own text marking defined terms — kept
+// separate from the text itself (not inline markup) so there's nothing to parse at render
+// time and no risk of markdown characters leaking into the editor.
 (function () {
-  const dialog = document.getElementById('block-editor-dialog');
-  if (!dialog) return;
-
   const docId = (document.querySelector('[data-doc-id]') || {}).dataset ? document.querySelector('[data-doc-id]').dataset.docId : 'default';
   const STORAGE_KEY = `diyer:blocks:${docId}`;
 
@@ -114,19 +111,7 @@
     return frag;
   }
 
-  // ---------- DOM <-> paragraphs model (the block's whole text: paragraphs + lists) ----------
-
-  // Chrome's execCommand('insertUnorderedList') wraps the resulting <ul> inside the
-  // paragraph it was applied to (<p><ul>...</ul></p>) instead of replacing that paragraph,
-  // which isn't valid block nesting and isn't a shape domToParagraphsModel expects (it only
-  // looks at textHost's direct children). Hoist any such <ul>/<ol> out to be a direct child
-  // of textHost itself, discarding the now-empty wrapping paragraph.
-  function normalizeTextHost() {
-    Array.from(textHost.querySelectorAll('p > ul, p > ol')).forEach((list) => {
-      const wrapper = list.parentElement;
-      if (wrapper.parentElement === textHost) wrapper.replaceWith(list);
-    });
-  }
+  // ---------- DOM <-> paragraphs model (a text block's whole content: paragraphs + lists) ----------
 
   function domToParagraphsModel(blockEls) {
     return blockEls.map((el) => {
@@ -158,6 +143,18 @@
       }
     });
     return frag;
+  }
+
+  // Chrome's execCommand('insertUnorderedList') wraps the resulting <ul> inside the
+  // paragraph it was applied to (<p><ul>...</ul></p>) instead of replacing that paragraph,
+  // which isn't valid block nesting and isn't a shape domToParagraphsModel expects (it only
+  // looks at the text host's direct children). Hoist any such <ul>/<ol> out to be a direct
+  // child of the host itself, discarding the now-empty wrapping paragraph.
+  function normalizeTextHost(host) {
+    Array.from(host.querySelectorAll('p > ul, p > ol')).forEach((list) => {
+      const wrapper = list.parentElement;
+      if (wrapper.parentElement === host) wrapper.replaceWith(list);
+    });
   }
 
   // Every {text, boldRanges} unit across all paragraphs and list items, in document order —
@@ -203,9 +200,6 @@
   // ---------- Reading/writing a block against its .content-row ----------
 
   function getTextBlockEls(rowEl) {
-    // Text lives either directly as a lone <p class="content-row-text"> (the common case,
-    // one plain paragraph, no definitions), or as one-or-more <p>/<ul> children of
-    // .content-row-text-group ahead of any .content-definition callouts.
     const bare = rowEl.querySelector(':scope > .content-row-text');
     if (bare) return [bare];
     const group = rowEl.querySelector(':scope > .content-row-text-group, :scope > .content-row-text-lines');
@@ -221,10 +215,24 @@
     });
   }
 
+  function isHeadingRow(rowEl) {
+    return rowEl.matches('.content-row--heading, .content-row--subheading');
+  }
+
   function readBlockFromRow(rowEl) {
+    if (isHeadingRow(rowEl)) {
+      const headingEl = rowEl.querySelector('.content-row-heading-text');
+      return {
+        id: rowEl.dataset.blockId,
+        type: rowEl.classList.contains('content-row--heading') ? 'heading' : 'subheading',
+        text: headingEl ? headingEl.textContent : '',
+        updatedAt: new Date().toISOString(),
+      };
+    }
     const img = rowEl.querySelector('.content-row-photo');
     return {
       id: rowEl.dataset.blockId,
+      type: 'text',
       paragraphs: domToParagraphsModel(getTextBlockEls(rowEl)),
       image: { src: img ? img.getAttribute('src') : '', alt: img ? img.getAttribute('alt') : '' },
       explanations: readExplanationsFromRow(rowEl),
@@ -236,20 +244,34 @@
     const rowEl = document.querySelector(`.content-row[data-block-id="${block.id}"]`);
     if (!rowEl) return;
 
-    const img = rowEl.querySelector('.content-row-photo');
-    if (img && block.image.src) {
-      img.setAttribute('src', block.image.src);
-      img.setAttribute('alt', block.image.alt || '');
-    }
-
-    const existingTextHost = rowEl.querySelector(':scope > .content-row-text, :scope > .content-row-text-group, :scope > .content-row-text-lines');
-    if (!existingTextHost) {
-      console.error(`content-editor: block ${block.id} has no text host to replace`);
+    if (block.type === 'heading' || block.type === 'subheading') {
+      const headingEl = rowEl.querySelector('.content-row-heading-text');
+      if (headingEl) headingEl.textContent = block.text;
       return;
     }
 
-    const isSimple = block.paragraphs.length === 1 && block.paragraphs[0].type === 'p' && block.explanations.length === 0;
+    const img = rowEl.querySelector('.content-row-photo');
+    if (block.image.src) {
+      if (img && img.tagName === 'IMG') {
+        img.setAttribute('src', block.image.src);
+        img.setAttribute('alt', block.image.alt || '');
+      } else if (img) {
+        // translating.html's placeholder rows use a bare <div class="content-row-photo
+        // content-row-photo--placeholder"> with no <img> at all — replace it with a real one.
+        const freshImg = document.createElement('img');
+        freshImg.className = img.className.replace('content-row-photo--placeholder', '').trim();
+        freshImg.setAttribute('src', block.image.src);
+        freshImg.setAttribute('alt', block.image.alt || '');
+        img.replaceWith(freshImg);
+      }
+    }
 
+    // Includes .content-row-edit-body so this correctly replaces the live edit surface
+    // (toolbar + contenteditable + explanations) when called on exit, not just the normal
+    // static text host.
+    const existingTextHost = rowEl.querySelector(':scope > .content-row-text, :scope > .content-row-text-group, :scope > .content-row-text-lines, :scope > .content-row-edit-body');
+
+    const isSimple = block.paragraphs.length === 1 && block.paragraphs[0].type === 'p' && block.explanations.length === 0;
     let newTextHost;
     if (isSimple) {
       const p = document.createElement('p');
@@ -274,7 +296,14 @@
       });
     }
 
-    existingTextHost.replaceWith(newTextHost);
+    if (existingTextHost) {
+      existingTextHost.replaceWith(newTextHost);
+    } else {
+      // A freshly-inserted block (via the add-menu) has no text host yet — insert one
+      // before the edit button rather than treating this as an error.
+      const editBtn = rowEl.querySelector('.edit-btn');
+      rowEl.insertBefore(newTextHost, editBtn);
+    }
   }
 
   function patchRowsFromStorage() {
@@ -282,107 +311,26 @@
     Object.keys(store).forEach((id) => writeBlockToDom(store[id]));
   }
 
-  // ---------- Tabs (WAI-ARIA APG tabs pattern: click + roving-tabindex arrow keys) ----------
-
-  function selectTab(tab) {
-    if (workingCopy) {
-      commitTextTab();
-      renderExplanationTab();
-    }
-    const tablist = tab.closest('[role="tablist"]');
-    const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
-    tabs.forEach((t) => {
-      const selected = t === tab;
-      t.setAttribute('aria-selected', String(selected));
-      t.tabIndex = selected ? 0 : -1;
-      document.getElementById(t.getAttribute('aria-controls')).hidden = !selected;
-    });
-  }
-
-  function initTabs(tablistEl) {
-    const tabs = Array.from(tablistEl.querySelectorAll('[role="tab"]'));
-    tabs.forEach((tab) => tab.addEventListener('click', () => selectTab(tab)));
-    tablistEl.addEventListener('keydown', (e) => {
-      const currentIndex = tabs.indexOf(document.activeElement);
-      if (currentIndex === -1) return;
-      let nextIndex = null;
-      if (e.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
-      else if (e.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-      else if (e.key === 'Home') nextIndex = 0;
-      else if (e.key === 'End') nextIndex = tabs.length - 1;
-      if (nextIndex !== null) {
-        e.preventDefault();
-        tabs[nextIndex].focus();
-        selectTab(tabs[nextIndex]);
-      }
-    });
-  }
-
-  // ---------- Dialog state ----------
+  // ---------- Inline edit state machine ----------
 
   let activeRowEl = null;
   let workingCopy = null;
+  let originalSnapshot = null;
+  let activeIsNewBlock = false;
 
-  const textHost = document.getElementById('editor-text-content');
-  const imageCurrentEl = document.getElementById('editor-image-current');
-  const imageSearchInput = document.getElementById('editor-image-search');
-  const imageGrid = document.getElementById('editor-image-grid');
-  const explanationList = document.getElementById('editor-explanation-list');
-  const explanationHint = document.getElementById('editor-explanation-hint');
-
-  // Enter creates a new <p> (rather than Chrome's default <div>) and the list-toggle button
-  // below relies on the browser's own native, well-tested handling of splitting/merging
-  // paragraphs and list items — reimplementing that with manual Range surgery would be a lot
-  // more code to reproduce what the browser already does correctly.
-  document.execCommand('defaultParagraphSeparator', false, 'p');
-
-  function renderTextTab() {
-    textHost.innerHTML = '';
-    textHost.appendChild(renderParagraphsToDom(workingCopy.paragraphs));
-  }
-
-  function commitTextTab() {
-    normalizeTextHost();
-    const blockEls = Array.from(textHost.children).filter((el) => el.tagName === 'P' || el.tagName === 'UL');
+  function commitActiveText() {
+    const host = activeRowEl.querySelector('[data-row-text-host]');
+    if (!host) return;
+    normalizeTextHost(host);
+    const blockEls = Array.from(host.children).filter((el) => el.tagName === 'P' || el.tagName === 'UL');
     workingCopy.paragraphs = domToParagraphsModel(blockEls);
     syncExplanationsWithBoldTerms(workingCopy);
   }
 
-  function renderImageResults(query) {
-    imageGrid.innerHTML = '';
-    const q = query.trim().toLowerCase();
-    const results = q
-      ? IMAGE_BANK.filter((entry) => entry.alt.toLowerCase().includes(q) || entry.keywords.toLowerCase().includes(q))
-      : IMAGE_BANK;
-    (results.length ? results : IMAGE_BANK).forEach((entry) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'editor-image-thumb';
-      btn.setAttribute('aria-pressed', String(entry.src === workingCopy.image.src));
-      btn.setAttribute('aria-label', entry.alt);
-      const img = document.createElement('img');
-      img.src = entry.src;
-      img.alt = '';
-      btn.appendChild(img);
-      btn.addEventListener('click', () => {
-        workingCopy.image = { src: entry.src, alt: entry.alt };
-        renderImageTab();
-      });
-      imageGrid.appendChild(btn);
-    });
-  }
-
-  function renderImageTab() {
-    imageCurrentEl.src = workingCopy.image.src;
-    imageCurrentEl.alt = workingCopy.image.alt;
-    const text = plainTextOf(workingCopy);
-    imageSearchInput.value = text;
-    renderImageResults(text);
-  }
-
-  function renderExplanationTab() {
-    explanationList.innerHTML = '';
-    explanationHint.hidden = workingCopy.explanations.length > 0;
+  function renderRowExplanations() {
+    const container = activeRowEl.querySelector('[data-row-explanations]');
+    if (!container) return;
+    container.innerHTML = '';
     workingCopy.explanations.forEach((ex, i) => {
       const item = document.createElement('div');
       item.className = 'editor-explanation-item';
@@ -395,74 +343,423 @@
       textarea.className = 'field-input';
       textarea.rows = 2;
       textarea.value = ex.definition;
+      textarea.dataset.explanationIndex = String(i);
       textarea.setAttribute('aria-label', `Explanation for "${ex.term}"`);
-      textarea.addEventListener('input', () => { workingCopy.explanations[i].definition = textarea.value; });
 
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'btn btn-link editor-explanation-remove';
       removeBtn.textContent = 'Remove';
-      removeBtn.addEventListener('click', () => {
-        // The pairing is structural (a bold term always has an explanation), so removing an
-        // explanation un-bolds its term in the text rather than leaving an orphaned bold word.
-        const term = ex.term;
-        allTextUnits(workingCopy).forEach((unit) => {
-          unit.boldRanges = unit.boldRanges.filter(([s, e]) => unit.text.slice(s, e) !== term);
-        });
-        syncExplanationsWithBoldTerms(workingCopy);
-        renderTextTab();
-        renderExplanationTab();
-      });
+      removeBtn.dataset.action = 'remove-explanation';
+      removeBtn.dataset.explanationIndex = String(i);
 
       item.appendChild(termLabel);
       item.appendChild(textarea);
       item.appendChild(removeBtn);
-      explanationList.appendChild(item);
+      container.appendChild(item);
     });
   }
 
-  function openEditor(rowEl) {
-    activeRowEl = rowEl;
-    workingCopy = readBlockFromRow(rowEl);
-    renderTextTab();
-    renderImageTab();
-    renderExplanationTab();
-    selectTab(document.getElementById('editor-tab-text'));
-    dialog.showModal();
+  function buildTextEditSurface(rowEl) {
+    const existingTextHost = rowEl.querySelector(':scope > .content-row-text, :scope > .content-row-text-group, :scope > .content-row-text-lines');
+
+    const body = document.createElement('div');
+    body.className = 'content-row-edit-body';
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'row-editor-toolbar';
+    toolbar.innerHTML = `
+      <button type="button" class="btn btn-outlined" data-action="mark-term" style="min-height:40px; padding: var(--space-2) var(--space-4);">Mark as defined term</button>
+      <button type="button" class="btn btn-outlined" data-action="toggle-list" style="min-height:40px; padding: var(--space-2) var(--space-4);">Bulleted list</button>
+    `;
+
+    const textHost = document.createElement('div');
+    textHost.className = 'content-row-text-group editor-contenteditable';
+    textHost.contentEditable = 'true';
+    textHost.setAttribute('role', 'textbox');
+    textHost.setAttribute('aria-multiline', 'true');
+    textHost.setAttribute('aria-label', 'Block text');
+    textHost.setAttribute('data-row-text-host', '');
+    textHost.appendChild(renderParagraphsToDom(workingCopy.paragraphs));
+
+    const explanations = document.createElement('div');
+    explanations.className = 'editor-explanation-list';
+    explanations.setAttribute('data-row-explanations', '');
+
+    const actions = document.createElement('div');
+    actions.className = 'row-editor-actions dialog-actions';
+    actions.innerHTML = `
+      <button type="button" class="btn btn-link" data-action="cancel-edit">Cancel</button>
+      <button type="button" class="btn btn-filled" data-action="save-edit">Save changes</button>
+    `;
+
+    body.appendChild(toolbar);
+    body.appendChild(textHost);
+    body.appendChild(explanations);
+    body.appendChild(actions);
+
+    if (existingTextHost) existingTextHost.replaceWith(body);
+    else rowEl.insertBefore(body, rowEl.querySelector('.edit-btn'));
+
+    renderRowExplanations();
+    textHost.focus();
   }
 
-  function closeEditor() {
-    if (dialog.open) dialog.close();
+  function buildHeadingEditSurface(rowEl) {
+    const headingEl = rowEl.querySelector('.content-row-heading-text');
+    headingEl.contentEditable = 'true';
+    headingEl.setAttribute('data-row-text-host', '');
+
+    const actions = document.createElement('div');
+    actions.className = 'row-editor-actions dialog-actions';
+    actions.innerHTML = `
+      <button type="button" class="btn btn-link" data-action="cancel-edit">Cancel</button>
+      <button type="button" class="btn btn-filled" data-action="save-edit">Save changes</button>
+    `;
+    rowEl.insertBefore(actions, rowEl.querySelector('.edit-btn'));
+    headingEl.focus();
+  }
+
+  function enterEditMode(rowEl, isNew) {
+    if (activeRowEl && activeRowEl !== rowEl) exitEditMode('save');
+    if (activeRowEl === rowEl) return;
+    closeImagePopover();
+    closeAddMenu();
+
+    activeRowEl = rowEl;
+    activeIsNewBlock = !!isNew;
+    workingCopy = readBlockFromRow(rowEl);
+    originalSnapshot = JSON.parse(JSON.stringify(workingCopy));
+    rowEl.classList.add('is-editing');
+
+    if (isHeadingRow(rowEl)) buildHeadingEditSurface(rowEl);
+    else buildTextEditSurface(rowEl);
+  }
+
+  function exitEditMode(mode) {
+    if (!activeRowEl) return;
+    const rowEl = activeRowEl;
+
+    // Cancelling a block that was just inserted (never actually saved before) removes it
+    // outright rather than "reverting" to its own placeholder content — there's nothing
+    // meaningful to revert to, and leaving placeholder text like "New heading" sitting in
+    // the document would look like a stray, broken block.
+    if (mode === 'cancel' && activeIsNewBlock) {
+      const trailingBetween = rowEl.nextElementSibling;
+      if (trailingBetween && trailingBetween.matches('.between-section')) trailingBetween.remove();
+      rowEl.remove();
+      activeRowEl = null;
+      workingCopy = null;
+      originalSnapshot = null;
+      activeIsNewBlock = false;
+      document.dispatchEvent(new CustomEvent('contentblocks:changed'));
+      return;
+    }
+
+    if (mode === 'cancel') {
+      writeBlockToDom(originalSnapshot);
+    } else {
+      if (workingCopy.type === 'text') commitActiveText();
+      else {
+        const host = rowEl.querySelector('[data-row-text-host]');
+        if (host) workingCopy.text = host.textContent;
+      }
+      const changed = JSON.stringify(workingCopy) !== JSON.stringify(originalSnapshot);
+      if (changed) {
+        workingCopy.updatedAt = new Date().toISOString();
+        writeBlockToDom(workingCopy);
+        saveBlockToStore(workingCopy);
+      } else {
+        writeBlockToDom(originalSnapshot);
+      }
+    }
+
+    rowEl.classList.remove('is-editing');
+    const actions = rowEl.querySelector('.row-editor-actions');
+    if (actions) actions.remove();
+    const headingEl = rowEl.querySelector('.content-row-heading-text');
+    if (headingEl) { headingEl.contentEditable = 'false'; headingEl.removeAttribute('data-row-text-host'); }
+
     activeRowEl = null;
     workingCopy = null;
+    originalSnapshot = null;
+    activeIsNewBlock = false;
+    document.dispatchEvent(new CustomEvent('contentblocks:changed'));
   }
 
-  // ---------- Wiring ----------
+  // ---------- Image popover ----------
 
-  document.querySelectorAll('[data-edit-block]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const rowEl = btn.closest('.content-row');
-      if (rowEl) openEditor(rowEl);
+  const imagePopover = document.getElementById('image-popover');
+  const imagePopoverSearch = document.getElementById('image-popover-search');
+  const imagePopoverGrid = document.getElementById('image-popover-grid');
+  const imagePopoverUploadInput = document.getElementById('image-popover-upload-input');
+  let imagePopoverRowEl = null;
+
+  function positionPopover(popoverEl, triggerEl) {
+    const rect = triggerEl.getBoundingClientRect();
+    const width = popoverEl.offsetWidth || 320;
+    let left = rect.left;
+    if (left + width > window.innerWidth - 16) left = window.innerWidth - width - 16;
+    if (left < 16) left = 16;
+    popoverEl.style.left = `${left}px`;
+    popoverEl.style.top = `${rect.bottom + 8}px`;
+  }
+
+  function renderImagePopoverResults(query) {
+    imagePopoverGrid.innerHTML = '';
+    const q = query.trim().toLowerCase();
+    const results = q
+      ? IMAGE_BANK.filter((entry) => entry.alt.toLowerCase().includes(q) || entry.keywords.toLowerCase().includes(q))
+      : IMAGE_BANK;
+    (results.length ? results : IMAGE_BANK).forEach((entry) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'editor-image-thumb';
+      btn.dataset.action = 'pick-image';
+      btn.dataset.imageSrc = entry.src;
+      btn.dataset.imageAlt = entry.alt;
+      btn.setAttribute('aria-pressed', String(workingCopy && entry.src === workingCopy.image.src));
+      btn.setAttribute('aria-label', entry.alt);
+      const img = document.createElement('img');
+      img.src = entry.src;
+      img.alt = '';
+      btn.appendChild(img);
+      imagePopoverGrid.appendChild(btn);
     });
-  });
+  }
 
-  document.querySelectorAll('.editor-tablist').forEach(initTabs);
+  function openImagePopover(triggerEl, rowEl) {
+    if (activeRowEl !== rowEl) enterEditMode(rowEl);
+    closeAddMenu();
+    imagePopoverRowEl = rowEl;
+    const query = plainTextOf(workingCopy);
+    imagePopoverSearch.value = query;
+    renderImagePopoverResults(query);
+    imagePopover.hidden = false;
+    positionPopover(imagePopover, triggerEl);
+    triggerEl.setAttribute('aria-expanded', 'true');
+  }
 
-  dialog.querySelectorAll('[data-action="cancel"]').forEach((btn) => {
-    btn.addEventListener('click', () => closeEditor());
-  });
-  // Fires on Escape (native <dialog> behavior) — the dialog closes itself, this just resets state.
-  dialog.addEventListener('cancel', () => { activeRowEl = null; workingCopy = null; });
+  function closeImagePopover() {
+    if (imagePopover.hidden) return;
+    imagePopover.hidden = true;
+    document.querySelectorAll('[data-image-trigger][aria-expanded="true"]').forEach((el) => el.setAttribute('aria-expanded', 'false'));
+    imagePopoverRowEl = null;
+  }
 
-  dialog.querySelector('[data-action="save"]').addEventListener('click', () => {
-    commitTextTab();
-    writeBlockToDom(workingCopy);
-    saveBlockToStore(workingCopy);
+  function pickImage(src, alt) {
+    if (!workingCopy || workingCopy.type !== 'text') return;
+    workingCopy.image = { src, alt };
+    const rowImg = activeRowEl.querySelector('.content-row-photo');
+    if (rowImg && rowImg.tagName === 'IMG') rowImg.setAttribute('src', src);
+    closeImagePopover();
+  }
+
+  // ---------- Add-block menu + insertion ----------
+
+  const addMenu = document.getElementById('add-block-menu');
+  let addMenuBetweenEl = null;
+
+  function openAddMenu(triggerEl, betweenEl) {
+    closeImagePopover();
+    addMenuBetweenEl = betweenEl;
+    addMenu.hidden = false;
+    positionPopover(addMenu, triggerEl);
+  }
+
+  function closeAddMenu() {
+    addMenu.hidden = true;
+    addMenuBetweenEl = null;
+  }
+
+  function nextBlockId() {
+    return `block-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+
+  function insertNewBlock(betweenEl, type) {
+    const id = nextBlockId();
+    let row;
+    if (type === 'heading' || type === 'subheading') {
+      row = document.createElement('div');
+      row.className = `content-row content-row--${type}`;
+      row.dataset.blockId = id;
+      const tag = type === 'heading' ? 'h2' : 'h3';
+      row.innerHTML = `
+        <${tag} class="content-row-heading-text">${type === 'heading' ? 'New heading' : 'New sub heading'}</${tag}>
+        <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
+      `;
+    } else {
+      row = document.createElement('div');
+      row.className = 'content-row';
+      row.dataset.blockId = id;
+      row.innerHTML = `
+        <div class="content-row-photo-wrap">
+          <div class="content-row-photo content-row-photo--placeholder"></div>
+          <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+            <img src="assets/icons/image.svg" alt="" width="20" height="20">
+          </button>
+        </div>
+        <p class="content-row-text">New content section</p>
+        <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
+      `;
+    }
+
+    betweenEl.insertAdjacentElement('afterend', row);
+    const freshBetween = betweenEl.cloneNode(true);
+    row.insertAdjacentElement('afterend', freshBetween);
+
+    closeAddMenu();
     document.dispatchEvent(new CustomEvent('contentblocks:changed'));
-    closeEditor();
+    enterEditMode(row, true);
+  }
+
+  // ---------- Wiring (event delegation — the edit surface is built/torn down dynamically) ----------
+
+  document.addEventListener('click', (e) => {
+    const editBtn = e.target.closest('[data-edit-block]');
+    if (editBtn) {
+      const rowEl = editBtn.closest('.content-row');
+      if (rowEl) enterEditMode(rowEl);
+      return;
+    }
+
+    const imageTrigger = e.target.closest('[data-image-trigger]');
+    if (imageTrigger) {
+      const rowEl = imageTrigger.closest('.content-row');
+      if (rowEl) openImagePopover(imageTrigger, rowEl);
+      return;
+    }
+
+    const addTrigger = e.target.closest('.add-btn, [data-add-trigger]');
+    if (addTrigger) {
+      const betweenEl = addTrigger.closest('.between-section');
+      if (betweenEl) openAddMenu(addTrigger, betweenEl);
+      return;
+    }
+
+    const addType = e.target.closest('[data-add-type]');
+    if (addType) {
+      if (addMenuBetweenEl) insertNewBlock(addMenuBetweenEl, addType.dataset.addType);
+      return;
+    }
+
+    const markTermBtn = e.target.closest('[data-action="mark-term"]');
+    if (markTermBtn) {
+      markSelectionAsTerm();
+      return;
+    }
+
+    const toggleListBtn = e.target.closest('[data-action="toggle-list"]');
+    if (toggleListBtn) {
+      const host = activeRowEl && activeRowEl.querySelector('[data-row-text-host]');
+      if (host) {
+        host.focus();
+        document.execCommand('insertUnorderedList');
+        commitActiveText();
+      }
+      return;
+    }
+
+    const removeExplanationBtn = e.target.closest('[data-action="remove-explanation"]');
+    if (removeExplanationBtn) {
+      const idx = Number(removeExplanationBtn.dataset.explanationIndex);
+      const term = workingCopy.explanations[idx].term;
+      allTextUnits(workingCopy).forEach((unit) => {
+        unit.boldRanges = unit.boldRanges.filter(([s, ee]) => unit.text.slice(s, ee) !== term);
+      });
+      const host = activeRowEl.querySelector('[data-row-text-host]');
+      host.innerHTML = '';
+      host.appendChild(renderParagraphsToDom(workingCopy.paragraphs));
+      syncExplanationsWithBoldTerms(workingCopy);
+      renderRowExplanations();
+      return;
+    }
+
+    const pickImageBtn = e.target.closest('[data-action="pick-image"]');
+    if (pickImageBtn) {
+      pickImage(pickImageBtn.dataset.imageSrc, pickImageBtn.dataset.imageAlt);
+      return;
+    }
+
+    if (e.target.closest('#image-popover-search-btn')) {
+      renderImagePopoverResults(imagePopoverSearch.value);
+      return;
+    }
+    if (e.target.closest('#image-popover-upload-btn')) {
+      imagePopoverUploadInput.click();
+      return;
+    }
+
+    if (e.target.closest('[data-action="save-edit"]')) { exitEditMode('save'); return; }
+    if (e.target.closest('[data-action="cancel-edit"]')) { exitEditMode('cancel'); return; }
+
+    // Clicking anywhere outside an open popover closes it (the popovers themselves are
+    // position:fixed siblings of everything else, so this is a safe global check).
+    if (imagePopover && !imagePopover.hidden && !imagePopover.contains(e.target) && !e.target.closest('[data-image-trigger]')) closeImagePopover();
+    if (addMenu && !addMenu.hidden && !addMenu.contains(e.target) && !e.target.closest('.add-btn, [data-add-trigger]')) closeAddMenu();
   });
 
-  document.getElementById('editor-mark-term').addEventListener('click', () => {
+  document.addEventListener('input', (e) => {
+    if (e.target.matches('[data-row-explanations] textarea')) {
+      const idx = Number(e.target.dataset.explanationIndex);
+      workingCopy.explanations[idx].definition = e.target.value;
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (addMenu && !addMenu.hidden) { closeAddMenu(); return; }
+      if (imagePopover && !imagePopover.hidden) { closeImagePopover(); return; }
+      if (activeRowEl) { exitEditMode('cancel'); return; }
+    }
+
+    if (e.key !== 'Enter') return;
+    const textHost = e.target.closest('[data-row-text-host]');
+    if (!textHost) return;
+    e.preventDefault();
+    if (workingCopy && workingCopy.type === 'text') {
+      document.execCommand('insertParagraph');
+      commitActiveText();
+    }
+    // Heading rows: Enter is simply suppressed — a heading never wraps into a new paragraph.
+  });
+
+  document.addEventListener('paste', (e) => {
+    const textHost = e.target.closest('[data-row-text-host]');
+    if (!textHost) return;
+    e.preventDefault();
+    const raw = (e.clipboardData || window.clipboardData).getData('text/plain');
+    // Paragraph breaks in this editor are structural (separate <p>/<li> elements), not
+    // inline characters, so a pasted multi-line string collapses onto one line rather than
+    // leaving raw, non-rendering newline characters sitting inside a single paragraph.
+    const text = raw.replace(/\r?\n+/g, ' ');
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(document.createTextNode(text));
+    range.collapse(false);
+  });
+
+  imagePopoverSearch.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); renderImagePopoverResults(imagePopoverSearch.value); }
+  });
+
+  imagePopoverUploadInput.addEventListener('change', () => {
+    const file = imagePopoverUploadInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      // A data: URL (not a blob: object URL) so this survives round-tripping through
+      // localStorage after a reload — object URLs are revoked/invalid once the page unloads.
+      pickImage(reader.result, file.name);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function markSelectionAsTerm() {
+    if (!activeRowEl || !workingCopy || workingCopy.type !== 'text') return;
+    const textHost = activeRowEl.querySelector('[data-row-text-host]');
     const sel = window.getSelection();
     if (!sel.rangeCount) return;
     const range = sel.getRangeAt(0);
@@ -489,64 +786,11 @@
       }
     }
     sel.removeAllRanges();
-    commitTextTab();
-    renderExplanationTab();
-  });
+    commitActiveText();
+    renderRowExplanations();
+  }
 
-  document.getElementById('editor-toggle-list').addEventListener('click', () => {
-    textHost.focus();
-    document.execCommand('insertUnorderedList');
-    commitTextTab();
-  });
-
-  textHost.addEventListener('keydown', (e) => {
-    // Invoked explicitly rather than left to the browser's default Enter handling, so
-    // paragraph creation is deterministic and doesn't depend on defaultParagraphSeparator
-    // having taken effect for this particular keystroke.
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      document.execCommand('insertParagraph');
-      commitTextTab();
-    }
-  });
-
-  textHost.addEventListener('paste', (e) => {
-    e.preventDefault();
-    const raw = (e.clipboardData || window.clipboardData).getData('text/plain');
-    // This editor's paragraph breaks are structural (separate <p>/<li> elements), not inline
-    // characters, so a pasted multi-line string collapses onto one line rather than leaving
-    // raw, non-rendering newline characters sitting inside a single paragraph.
-    const text = raw.replace(/\r?\n+/g, ' ');
-    const sel = window.getSelection();
-    if (!sel.rangeCount) return;
-    const range = sel.getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(document.createTextNode(text));
-    range.collapse(false);
-  });
-
-  document.getElementById('editor-image-search-btn').addEventListener('click', () => {
-    renderImageResults(imageSearchInput.value);
-  });
-  imageSearchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); renderImageResults(imageSearchInput.value); }
-  });
-
-  const uploadInput = document.getElementById('editor-upload-input');
-  document.getElementById('editor-upload-btn').addEventListener('click', () => uploadInput.click());
-  uploadInput.addEventListener('change', () => {
-    const file = uploadInput.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      // A data: URL (not a blob: object URL) so this survives round-tripping through
-      // localStorage after a reload — object URLs are revoked/invalid once the page unloads.
-      workingCopy.image = { src: reader.result, alt: file.name };
-      renderImageTab();
-    };
-    reader.readAsDataURL(file);
-  });
-
+  document.execCommand('defaultParagraphSeparator', false, 'p');
   patchRowsFromStorage();
   if (window.relayoutAll) window.relayoutAll();
 })();

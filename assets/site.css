@@ -622,23 +622,11 @@
 .dialog::backdrop { background: rgba(0, 35, 43, 0.5); }
 .dialog .icon-fab.close { position: absolute; top: var(--space-4); right: var(--space-4); }
 .dialog-title { font-size: 28px; line-height: 36px; font-weight: 600; color: var(--fg-primary); margin: 0 56px var(--space-5) 0; }
+.dialog p { font-size: var(--fs-body-lg); line-height: var(--lh-body-lg); font-weight: var(--font-weight-regular); color: var(--fg-primary); margin: 0; }
 .dialog-actions {
   display: flex; justify-content: flex-end; gap: var(--space-3);
   margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--divider-default);
 }
-
-.editor-tablist { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-5); }
-.editor-tab {
-  padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill);
-  border: 2px solid var(--borders); background: transparent; color: var(--fg-primary);
-  font-family: inherit; font-size: var(--fs-body-lg); line-height: var(--lh-body-lg); font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-.editor-tab[aria-selected="true"] { background: var(--bg-800); color: var(--text-inverted); border-color: var(--bg-800); }
-.editor-tab:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
-
-.editor-panel { display: flex; flex-direction: column; gap: var(--space-5); }
-.editor-panel[hidden] { display: none; }
 
 .field { display: flex; flex-direction: column; gap: var(--space-2); }
 .field-label { font-size: var(--fs-body-lg); line-height: var(--lh-body-lg); font-weight: var(--font-weight-semibold); color: var(--fg-primary); }
@@ -677,6 +665,45 @@
 .editor-explanation-term { font-size: 18px; line-height: 24px; font-weight: var(--font-weight-semibold); color: var(--fg-primary); }
 .editor-explanation-remove { align-self: flex-end; }
 .editor-empty-hint { font-size: 18px; line-height: 24px; color: var(--fg-secondary); font-style: italic; margin: 0; }
+
+/* Inline editing: a row being edited grows in place, so the page it's on is allowed to
+   overflow its normally-fixed height for as long as editing is active (see .doc-page:has
+   below) — repagination only runs again once editing exits, via contentblocks:changed. */
+.content-row.is-editing {
+  position: relative; z-index: 2; align-items: flex-start;
+  box-shadow: 0 8px 24px rgba(0, 35, 43, 0.18);
+}
+.doc-page:has(.content-row.is-editing) { overflow: visible; }
+.content-row.is-editing .edit-btn { display: none; }
+
+.content-row-photo-wrap { position: relative; flex-shrink: 0; }
+.image-edit-trigger {
+  position: absolute; inset: 0; margin: auto; width: 40px; height: 40px;
+  border-radius: var(--radius-pill); background: rgba(0, 35, 43, 0.55); border: 0; padding: 0;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  opacity: 0; pointer-events: none; transition: opacity var(--dur-base) var(--ease-standard);
+}
+.content-row.is-editing .image-edit-trigger,
+.image-edit-trigger:focus-visible { opacity: 1; pointer-events: auto; }
+.image-edit-trigger:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.image-edit-trigger img { filter: invert(1); }
+
+.content-row-edit-body { display: flex; flex-direction: column; gap: var(--space-3); flex: 1; min-width: 0; }
+.row-editor-toolbar { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+.row-editor-actions { margin-top: var(--space-2); padding-top: var(--space-4); }
+
+.content-row--heading, .content-row--subheading { min-height: 0; justify-content: flex-start; align-items: center; }
+.content-row-heading-text { margin: 0; flex: 1; }
+.content-row-heading-text[contenteditable="true"] {
+  outline: 2px solid var(--teal-400); outline-offset: var(--space-2); border-radius: 4px;
+}
+.content-row-heading-text[contenteditable="true"]:focus {
+  outline-color: var(--focus);
+}
+
+.image-popover, .add-menu-popover { position: fixed; z-index: 20; }
+.image-popover { width: 320px; }
+.add-menu-popover { width: 220px; }
 
 /* -------- Screen 4: Dashboard -------- */
 .dashboard-page { min-height: 100vh; background: var(--sand-100); color: var(--fg-primary); }
