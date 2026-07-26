@@ -20,31 +20,42 @@ function layoutContentRows() {
 // (flatten every content page's children into one ordered list, then re-chunk it from
 // scratch) rather than an incremental push/pull, so the same logic handles both directions
 // and any number of cascading pages correctly.
-// A `.between-section` is a spacer/add-button bar, not content in its own right — it
-// should never end up alone at the top of a page, separated from the row it introduces.
-// Group each between-section with the content-row immediately after it (a trailing
-// between-section with no following row, i.e. the "add block at bottom" spacer on the
-// last row, joins the previous group instead) so a page break only ever falls between
-// groups, never inside one.
+//
+// A `.between-section` is a spacer/add-button bar, not content in its own right, and it
+// always belongs to the row ABOVE it (its "+" is how you insert something right after that
+// row) — so it's grouped as [row, trailing between-section], an atomic unit a page break
+// never splits. This guarantees a page's last visible row always keeps its "+" underneath.
+// Each authored page was originally built with its own leading AND trailing spacer, so once
+// every page's children are flattened into one continuous document, adjacent page seams end
+// up with two spacers back to back — both representing the exact same insertion point. The
+// second one is a duplicate and is discarded (removed from the DOM entirely, not just left
+// unbucketed) rather than kept, which is what previously caused between-sections to land
+// inconsistently — sometimes stranded alone at the top of a page, sometimes doubled up.
 function groupContentItems(items) {
   const groups = [];
   let i = 0;
+
+  // A between-section at the very start of the whole document has no row above it to
+  // belong to — it's the genuine "add block at the top" spacer and stands alone.
+  if (items[i] && items[i].matches('.between-section')) {
+    groups.push([items[i]]);
+    i += 1;
+  }
+
   while (i < items.length) {
-    const group = [];
-    if (items[i].matches('.between-section')) {
-      group.push(items[i]);
+    const item = items[i];
+    if (item.matches('.between-section')) {
+      item.remove();
       i += 1;
+      continue;
     }
-    if (i < items.length && !items[i].matches('.between-section')) {
+    const group = [item];
+    i += 1;
+    if (i < items.length && items[i].matches('.between-section')) {
       group.push(items[i]);
       i += 1;
     }
     groups.push(group);
-  }
-  const last = groups[groups.length - 1];
-  if (groups.length > 1 && last.length === 1 && last[0].matches('.between-section')) {
-    groups[groups.length - 2].push(...last);
-    groups.pop();
   }
   return groups;
 }
@@ -66,20 +77,39 @@ function repaginateContentPages() {
   // they overflow rather than staying pinned to the page's fixed height. The shell
   // (.doc-page) has an explicit CSS height and clips overflow, so it stays the true,
   // stable A4-representative size regardless of how much content is currently inside it.
+  const pageRect = contentPages[0].getBoundingClientRect();
   const pageStyle = getComputedStyle(contentPages[0]);
-  const capacity = contentPages[0].getBoundingClientRect().height
+  const fullHeight = pageRect.height
     - parseFloat(pageStyle.paddingTop) - parseFloat(pageStyle.paddingBottom);
+
+  // .doc-page-num sits absolutely positioned near the bottom-left corner and must stay a
+  // safe, empty margin — a row's own content should never grow tall enough to run into it.
+  // Measured live (distance from the page's bottom edge up to the page number's top edge,
+  // plus a small gap) rather than hardcoded, so it stays correct if that styling changes.
+  const pageNumEl = contentPages[0].querySelector('.doc-page-num');
+  const SAFE_GAP = 8;
+  const reservedForPageNum = pageNumEl
+    ? (pageRect.bottom - pageNumEl.getBoundingClientRect().top) + SAFE_GAP
+    : 0;
+  const rowCapacity = fullHeight - reservedForPageNum;
 
   const buckets = [[]];
   let currentHeight = 0;
   groups.forEach((group) => {
-    const h = group.reduce((sum, item) => sum + item.getBoundingClientRect().height, 0);
-    if (currentHeight > 0 && currentHeight + h > capacity) {
+    const rowEl = group.find((el) => el.matches('.content-row'));
+    const rowHeight = rowEl ? rowEl.getBoundingClientRect().height : 0;
+    const totalHeight = group.reduce((sum, item) => sum + item.getBoundingClientRect().height, 0);
+
+    // Only the row itself has to clear the page-number safe zone — its trailing
+    // between-section is allowed to sit within that margin, since the "+" button it
+    // holds is centered in the row's width and never reaches the left edge where the
+    // page number lives, so there's no real visual collision.
+    if (currentHeight > 0 && currentHeight + rowHeight > rowCapacity) {
       buckets.push([]);
       currentHeight = 0;
     }
     buckets[buckets.length - 1].push(...group);
-    currentHeight += h;
+    currentHeight += totalHeight;
   });
 
   // Create additional content pages if needed, cloning the shell of the last one
