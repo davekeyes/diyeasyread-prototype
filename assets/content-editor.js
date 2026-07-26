@@ -256,8 +256,7 @@
   function readExplanationsFromRow(rowEl) {
     return Array.from(rowEl.querySelectorAll('.content-definition')).map((def) => {
       const span = def.querySelector('span:not(.content-definition-emoji)');
-      const strong = span ? span.querySelector('strong') : null;
-      return { term: strong ? strong.textContent : '', definition: span ? span.textContent : '' };
+      return { term: def.dataset.term || '', definition: span ? span.textContent : '' };
     });
   }
 
@@ -331,6 +330,11 @@
       block.explanations.forEach((ex) => {
         const def = document.createElement('div');
         def.className = 'content-definition';
+        // The term itself is stored here rather than only relying on the <strong> rendered
+        // inside the definition text below — that <strong> only appears once boldFirstOccurrence
+        // finds the term inside a filled-in definition, so a term with a still-blank definition
+        // would otherwise be unrecoverable by readExplanationsFromRow on the next edit.
+        def.dataset.term = ex.term;
         // A term-linked explanation (💡) reads as "here's what this bolded word means" —
         // misleading for a standalone note that isn't tied to any highlighted word, so those
         // get an info icon instead.
@@ -398,19 +402,32 @@
       const item = document.createElement('div');
       item.className = 'editor-explanation-item';
 
-      // "Add an explanation for <term>" — matches the Figma treatment (node 532:7898). A
-      // standalone explanation (no term) drops the "for <term>" part since there's no word
-      // to name.
+      // Label reads as just the term itself (bold) rather than "Add an explanation for
+      // <term>" — a standalone explanation (no term) falls back to a generic "Explanation"
+      // heading since there's no word to name.
+      const header = document.createElement('div');
+      header.className = 'editor-explanation-header';
+
       const termLabel = document.createElement('div');
       termLabel.className = 'editor-explanation-term';
       if (ex.term) {
-        termLabel.append('Add an explanation for ');
         const strong = document.createElement('strong');
         strong.textContent = ex.term;
         termLabel.appendChild(strong);
       } else {
-        termLabel.textContent = 'Add an explanation';
+        termLabel.textContent = 'Explanation';
       }
+
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'editor-explanation-close';
+      closeBtn.dataset.action = 'remove-explanation';
+      closeBtn.dataset.explanationIndex = String(i);
+      closeBtn.setAttribute('aria-label', ex.term ? `Remove explanation for "${ex.term}"` : 'Remove explanation');
+      closeBtn.innerHTML = '<img src="assets/icons/close.svg" alt="" width="16" height="16">';
+
+      header.appendChild(termLabel);
+      header.appendChild(closeBtn);
 
       const textarea = document.createElement('textarea');
       textarea.className = 'field-input';
@@ -419,16 +436,8 @@
       textarea.dataset.explanationIndex = String(i);
       textarea.setAttribute('aria-label', `Explanation for "${ex.term}"`);
 
-      const removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.className = 'btn btn-link editor-explanation-remove';
-      removeBtn.textContent = 'Remove';
-      removeBtn.dataset.action = 'remove-explanation';
-      removeBtn.dataset.explanationIndex = String(i);
-
-      item.appendChild(termLabel);
+      item.appendChild(header);
       item.appendChild(textarea);
-      item.appendChild(removeBtn);
       container.appendChild(item);
     });
   }
@@ -982,36 +991,43 @@
     commitActiveText();
   }
 
-  // Typing "-" or "•" as the very first character of an empty paragraph, then a space,
-  // converts that paragraph into a bulleted list item (the marker character itself is
-  // consumed, not left behind) — the same shorthand most block-based text editors support.
-  // Deliberately scoped to plain <p> blocks only, never an existing <li>: execCommand
-  // ('insertUnorderedList') toggles, so calling it again inside an existing list item would
-  // remove that item from the list instead of starting a new nested one.
+  // Typing "-" or "•" as the very first character of a paragraph, then a space, converts
+  // that paragraph into a bulleted list item — the marker is consumed, and anything already
+  // typed after it (an empty paragraph, or a sentence the cursor is sitting in front of)
+  // becomes the new list item's content, matching the shorthand most block-based text
+  // editors support. Deliberately scoped to plain <p> blocks only, never an existing <li>:
+  // execCommand('insertUnorderedList') toggles, so calling it again inside an existing list
+  // item would remove that item from the list instead of starting a new nested one.
   function startBulletListFromMarker(e) {
     if (!workingCopy || workingCopy.type !== 'text') return;
     const sel = window.getSelection();
     if (!sel.rangeCount || !sel.isCollapsed) return;
     const range = sel.getRangeAt(0);
     const container = range.startContainer;
-    // After certain Range mutations (not just direct typing) the cursor's container can be
-    // the block element itself rather than its text node — resolve to the element either
-    // way rather than requiring an exact text-node/offset match. Since this only fires when
-    // the *entire* paragraph is just the marker character (checked below), there's nowhere
-    // else a genuine cursor in that paragraph could be but right after it.
     const el = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
     const blockEl = el && el.closest('p');
     if (!blockEl) return;
-    if (blockEl.textContent !== '-' && blockEl.textContent !== '•') return;
+
+    // The marker must be the very first content of the paragraph, with the cursor sitting
+    // immediately after it — nothing else between the paragraph's start and the cursor.
+    const preRange = document.createRange();
+    preRange.setStart(blockEl, 0);
+    preRange.setEnd(range.startContainer, range.startOffset);
+    const marker = preRange.toString();
+    if (marker !== '-' && marker !== '•') return;
 
     e.preventDefault();
     // Direct DOM replacement rather than clearing the paragraph and calling
-    // execCommand('insertUnorderedList') on it — a completely empty block (no text node, no
-    // <br>) isn't a reliable target for that command in every browser; it can end up
-    // converting some other paragraph in the row instead of this exact one. Since blockEl is
-    // already the precise node in hand, replacing it directly removes the ambiguity entirely.
+    // execCommand('insertUnorderedList') on it — an empty block (no text node, no <br>)
+    // isn't a reliable target for that command in every browser; it can end up converting
+    // some other paragraph in the row instead of this exact one. Since blockEl is already
+    // the precise node in hand, moving its content directly removes the ambiguity entirely.
     const ul = document.createElement('ul');
     const li = document.createElement('li');
+    while (blockEl.firstChild) li.appendChild(blockEl.firstChild);
+    const walker = document.createTreeWalker(li, NodeFilter.SHOW_TEXT);
+    const firstTextNode = walker.nextNode();
+    if (firstTextNode) firstTextNode.textContent = firstTextNode.textContent.slice(marker.length);
     ul.appendChild(li);
     blockEl.replaceWith(ul);
     const freshRange = document.createRange();

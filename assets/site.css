@@ -672,9 +672,16 @@
 .editor-explanation-list { display: flex; flex-direction: column; gap: var(--space-4); }
 .editor-explanation-list:empty { display: none; }
 .editor-explanation-item { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-sm); background: var(--teal-200); box-sizing: border-box; }
+.editor-explanation-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .editor-explanation-term { font-size: 20px; line-height: 28px; font-weight: var(--font-weight-regular); color: var(--teal-800); }
 .editor-explanation-term strong { font-weight: var(--font-weight-semibold); }
-.editor-explanation-remove { align-self: flex-end; }
+.editor-explanation-close {
+  width: 32px; height: 32px; flex-shrink: 0; border: none; background: none;
+  border-radius: var(--radius-pill); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+.editor-explanation-close:hover { background: rgba(0, 35, 43, 0.08); }
 .editor-empty-hint { font-size: 18px; line-height: 24px; color: var(--fg-secondary); font-style: italic; margin: 0; }
 
 /* Inline editing: a row being edited grows in place, so the page it's on is allowed to
