@@ -671,7 +671,7 @@
    teal-200 background, "Add an explanation for <term>" label above the input. */
 .editor-explanation-list { display: flex; flex-direction: column; gap: var(--space-4); }
 .editor-explanation-list:empty { display: none; }
-.editor-explanation-item { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-sm); background: var(--teal-200); box-sizing: border-box; }
+.editor-explanation-item { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4) var(--space-4); border-radius: var(--radius-sm); background: var(--teal-200); box-sizing: border-box; }
 .editor-explanation-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .editor-explanation-term { font-size: 20px; line-height: 28px; font-weight: var(--font-weight-regular); color: var(--teal-800); }
 .editor-explanation-term strong { font-weight: var(--font-weight-semibold); }
