@@ -616,7 +616,15 @@
     if (left + width > window.innerWidth - 16) left = window.innerWidth - width - 16;
     if (left < 16) left = 16;
     popoverEl.style.left = `${left}px`;
-    popoverEl.style.top = `${rect.bottom + 8}px`;
+
+    // Open upward instead of downward when there isn't enough room below the trigger (a
+    // content block near the bottom of the window) — but only if there's actually more room
+    // above; otherwise keep opening downward and let it get clipped, same as before.
+    const height = popoverEl.offsetHeight || 0;
+    const spaceBelow = window.innerHeight - rect.bottom - 8;
+    const spaceAbove = rect.top - 8;
+    const openUpward = height > spaceBelow && spaceAbove >= height;
+    popoverEl.style.top = openUpward ? `${rect.top - height - 8}px` : `${rect.bottom + 8}px`;
   }
 
   // These popovers are position:fixed (deliberately — see openImagePopover/openAddMenu),
