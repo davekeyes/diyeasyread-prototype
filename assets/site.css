@@ -635,14 +635,14 @@
 .field-input, .editor-contenteditable {
   font-family: inherit; font-size: 20px; line-height: 28px; font-weight: var(--font-weight-regular);
   padding: var(--space-3) var(--space-4); box-sizing: border-box; width: 100%;
-  border: 2px solid var(--teal-200); border-radius: 10px;
+  border: 1px solid var(--teal-400); border-radius: 10px;
   background: var(--sand-000); color: var(--fg-primary);
 }
 /* Single border only — no separate outline ring, which previously stacked with the border
    plus its offset gap and read as two or three concentric borders. Just the border darkens
    on focus instead. */
 .field-input:focus, .editor-contenteditable:focus {
-  outline: none; border-color: var(--teal-900);
+  outline: none; border-color: var(--teal-700);
 }
 .editor-contenteditable { min-height: 96px; }
 .editor-contenteditable strong { font-weight: 700; }
@@ -664,9 +664,12 @@
 .editor-image-thumb:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 .editor-upload-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 
+/* Matches the Figma "EasyRead Content block" explanation treatment (node 532:7898):
+   teal-200 background, "Add an explanation for <term>" label above the input. */
 .editor-explanation-list { display: flex; flex-direction: column; gap: var(--space-4); }
-.editor-explanation-item { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-sm); background: var(--sand-100); box-sizing: border-box; }
-.editor-explanation-term { font-size: 18px; line-height: 24px; font-weight: var(--font-weight-semibold); color: var(--fg-primary); }
+.editor-explanation-item { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-sm); background: var(--teal-200); box-sizing: border-box; }
+.editor-explanation-term { font-size: 20px; line-height: 28px; font-weight: var(--font-weight-regular); color: var(--teal-800); }
+.editor-explanation-term strong { font-weight: var(--font-weight-semibold); }
 .editor-explanation-remove { align-self: flex-end; }
 .editor-empty-hint { font-size: 18px; line-height: 24px; color: var(--fg-secondary); font-style: italic; margin: 0; }
 
@@ -697,10 +700,14 @@
 
 .content-row-edit-body { display: flex; flex-direction: column; gap: var(--space-3); flex: 1; min-width: 0; }
 .row-editor-actions {
-  margin-top: var(--space-2); padding-top: var(--space-4);
+  margin-top: 0; padding-top: 0; border-top: none;
   justify-content: space-between; align-items: center;
 }
 .row-editor-actions-left { display: flex; gap: var(--space-3); align-items: center; }
+/* height, not min-height: the base .btn padding (--space-3 vertical) plus its 20px/28px
+   text pushes natural height to 56px, past a min-height floor. Padding is tightened here so
+   48px is the real rendered height, not just a floor a taller box ignores. */
+.row-editor-actions-left .btn { height: 48px; padding-top: var(--space-2); padding-bottom: var(--space-2); }
 .btn-icon { width: 16px; height: 16px; flex-shrink: 0; }
 /* brightness(0) invert(1) — not invert(1) alone, which turns this icon's saturated teal
    stroke pink instead of white. Same fix as .image-edit-trigger img above. */
@@ -729,11 +736,11 @@
 /* Same single-border pattern as .field-input/.editor-contenteditable — a border, not an
    offset outline, so it's one visible ring rather than a border-plus-detached-outline. */
 .content-row-heading-text[contenteditable="true"] {
-  border: 2px solid var(--teal-200); border-radius: 4px; padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--teal-400); border-radius: 4px; padding: var(--space-1) var(--space-2);
   margin: calc(var(--space-1) * -1) calc(var(--space-2) * -1);
 }
 .content-row-heading-text[contenteditable="true"]:focus {
-  outline: none; border-color: var(--teal-900);
+  outline: none; border-color: var(--teal-700);
 }
 
 .image-popover, .add-menu-popover, .row-overflow-menu { position: fixed; z-index: 20; }

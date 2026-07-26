@@ -379,9 +379,19 @@
       const item = document.createElement('div');
       item.className = 'editor-explanation-item';
 
+      // "Add an explanation for <term>" — matches the Figma treatment (node 532:7898). A
+      // standalone explanation (no term) drops the "for <term>" part since there's no word
+      // to name.
       const termLabel = document.createElement('div');
       termLabel.className = 'editor-explanation-term';
-      termLabel.textContent = ex.term;
+      if (ex.term) {
+        termLabel.append('Add an explanation for ');
+        const strong = document.createElement('strong');
+        strong.textContent = ex.term;
+        termLabel.appendChild(strong);
+      } else {
+        termLabel.textContent = 'Add an explanation';
+      }
 
       const textarea = document.createElement('textarea');
       textarea.className = 'field-input';
@@ -439,16 +449,11 @@
     textHost.setAttribute('data-row-text-host', '');
     textHost.appendChild(renderParagraphsToDom(workingCopy.paragraphs));
 
-    const hint = document.createElement('p');
-    hint.className = 'field-hint';
-    hint.textContent = 'Press Enter for a new paragraph. Select text and press Cmd/Ctrl+B to mark it as a defined term. Type "- " or "• " to start a bulleted list.';
-
     const explanations = document.createElement('div');
     explanations.className = 'editor-explanation-list';
     explanations.setAttribute('data-row-explanations', '');
 
     body.appendChild(textHost);
-    body.appendChild(hint);
     body.appendChild(explanations);
     body.appendChild(buildActionsBar());
 
@@ -771,6 +776,22 @@
     if (imageTrigger) {
       const rowEl = imageTrigger.closest('.content-row');
       if (rowEl) openImagePopover(imageTrigger, rowEl);
+      return;
+    }
+
+    // Tapping anywhere in a not-yet-editing block starts editing it — the Edit button and
+    // image hover-trigger above already handle their own specific cases and return early, so
+    // this only ever fires for the rest of the row (text, background, or the image itself
+    // before its hover-trigger becomes interactive). Tapping the image specifically also
+    // opens the image popover immediately, rather than requiring a second tap once editing.
+    const rowForTap = e.target.closest('.content-row');
+    if (rowForTap && !rowForTap.classList.contains('is-editing')) {
+      const tappedImage = e.target.closest('.content-row-photo');
+      enterEditMode(rowForTap);
+      if (tappedImage) {
+        const trigger = rowForTap.querySelector('[data-image-trigger]');
+        if (trigger) openImagePopover(trigger, rowForTap);
+      }
       return;
     }
 
