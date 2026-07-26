@@ -575,6 +575,10 @@
 .content-row-text-group, .content-row-text-lines { display: flex; flex-direction: column; gap: var(--space-4); justify-content: center; flex: 1; min-height: 192px; box-sizing: border-box; }
 .content-row--top .content-row-text-group, .content-row--top .content-row-text-lines { justify-content: flex-start; }
 .content-row-text-group p, .content-row-text-lines p { font-size: 24px; line-height: 32px; color: var(--fg-primary); margin: 0; }
+.content-row-text-group ul, .content-row-text-lines ul {
+  margin: 0; padding-left: 28px; display: flex; flex-direction: column; gap: var(--space-2);
+}
+.content-row-text-group li, .content-row-text-lines li { font-size: 24px; line-height: 32px; color: var(--fg-primary); }
 /* #C5DFE0 is a one-off teal wash for this callout, not a named token — see handoff README */
 .content-definition { border-radius: var(--radius-sm); background: #C5DFE0; display: flex; flex-direction: row; gap: var(--space-2); padding: var(--space-3); align-items: flex-start; box-sizing: border-box; }
 .content-definition svg { flex-shrink: 0; }
@@ -650,6 +654,10 @@
 }
 .editor-contenteditable { min-height: 96px; }
 .editor-contenteditable strong { font-weight: 700; }
+.editor-contenteditable p { margin: 0 0 var(--space-3) 0; }
+.editor-contenteditable ul { margin: 0 0 var(--space-3) 0; padding-left: 28px; }
+.editor-contenteditable li { margin-bottom: var(--space-1); }
+.editor-contenteditable p:last-child, .editor-contenteditable ul:last-child { margin-bottom: 0; }
 
 .editor-toolbar { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
 

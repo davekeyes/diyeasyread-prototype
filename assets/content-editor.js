@@ -1,9 +1,15 @@
 // Content block editor: Text / Image / Explanation dialog for .content-row blocks in document.html.
 // Data model per block, persisted to localStorage on Save:
-//   { id, text, boldRanges: [[start,end], ...], image: {src, alt}, explanations: [{term, definition}], updatedAt }
-// boldRanges are character offsets into `text` marking defined terms — kept separate from the
-// text itself (rather than inline markup) so there's nothing to parse at render time and no
-// risk of literal markdown characters leaking into the editor.
+//   {
+//     id, image: {src, alt}, explanations: [{term, definition}], updatedAt,
+//     paragraphs: [
+//       { type: 'p', text, boldRanges: [[start,end], ...] } |
+//       { type: 'ul', items: [{ text, boldRanges }, ...] }
+//     ]
+//   }
+// boldRanges are character offsets into a unit's own `text` marking defined terms — kept
+// separate from the text itself (rather than inline markup) so there's nothing to parse at
+// render time and no risk of literal markdown characters leaking into the editor.
 (function () {
   const dialog = document.getElementById('block-editor-dialog');
   if (!dialog) return;
@@ -53,7 +59,7 @@
     }
   }
 
-  // ---------- DOM <-> text model ----------
+  // ---------- DOM <-> inline text model (a single paragraph or list item's own content) ----------
 
   function domToTextModel(containerEl) {
     let text = '';
@@ -108,8 +114,73 @@
     return frag;
   }
 
+  // ---------- DOM <-> paragraphs model (the block's whole text: paragraphs + lists) ----------
+
+  // Chrome's execCommand('insertUnorderedList') wraps the resulting <ul> inside the
+  // paragraph it was applied to (<p><ul>...</ul></p>) instead of replacing that paragraph,
+  // which isn't valid block nesting and isn't a shape domToParagraphsModel expects (it only
+  // looks at textHost's direct children). Hoist any such <ul>/<ol> out to be a direct child
+  // of textHost itself, discarding the now-empty wrapping paragraph.
+  function normalizeTextHost() {
+    Array.from(textHost.querySelectorAll('p > ul, p > ol')).forEach((list) => {
+      const wrapper = list.parentElement;
+      if (wrapper.parentElement === textHost) wrapper.replaceWith(list);
+    });
+  }
+
+  function domToParagraphsModel(blockEls) {
+    return blockEls.map((el) => {
+      if (el.tagName === 'UL') {
+        return {
+          type: 'ul',
+          items: Array.from(el.children).filter((li) => li.tagName === 'LI').map((li) => domToTextModel(li)),
+        };
+      }
+      return Object.assign({ type: 'p' }, domToTextModel(el));
+    });
+  }
+
+  function renderParagraphsToDom(paragraphs) {
+    const frag = document.createDocumentFragment();
+    paragraphs.forEach((para) => {
+      if (para.type === 'ul') {
+        const ul = document.createElement('ul');
+        para.items.forEach((item) => {
+          const li = document.createElement('li');
+          li.appendChild(renderTextWithBold(item.text, item.boldRanges));
+          ul.appendChild(li);
+        });
+        frag.appendChild(ul);
+      } else {
+        const p = document.createElement('p');
+        p.appendChild(renderTextWithBold(para.text, para.boldRanges));
+        frag.appendChild(p);
+      }
+    });
+    return frag;
+  }
+
+  // Every {text, boldRanges} unit across all paragraphs and list items, in document order —
+  // the flat view bold-term tracking and search prefill work against.
+  function allTextUnits(block) {
+    const units = [];
+    block.paragraphs.forEach((para) => {
+      if (para.type === 'ul') para.items.forEach((item) => units.push(item));
+      else units.push(para);
+    });
+    return units;
+  }
+
+  function plainTextOf(block) {
+    return allTextUnits(block).map((u) => u.text).join(' ');
+  }
+
   function boldTermsOf(block) {
-    return block.boldRanges.map(([start, end]) => block.text.slice(start, end));
+    const terms = [];
+    allTextUnits(block).forEach((unit) => {
+      unit.boldRanges.forEach(([start, end]) => terms.push(unit.text.slice(start, end)));
+    });
+    return terms;
   }
 
   // Keeps `explanations` structurally in sync with the current bold terms: a term that's no
@@ -131,8 +202,15 @@
 
   // ---------- Reading/writing a block against its .content-row ----------
 
-  function getTextParagraph(rowEl) {
-    return rowEl.querySelector('.content-row-text, .content-row-text-group > p, .content-row-text-lines > p');
+  function getTextBlockEls(rowEl) {
+    // Text lives either directly as a lone <p class="content-row-text"> (the common case,
+    // one plain paragraph, no definitions), or as one-or-more <p>/<ul> children of
+    // .content-row-text-group ahead of any .content-definition callouts.
+    const bare = rowEl.querySelector(':scope > .content-row-text');
+    if (bare) return [bare];
+    const group = rowEl.querySelector(':scope > .content-row-text-group, :scope > .content-row-text-lines');
+    if (!group) return [];
+    return Array.from(group.children).filter((el) => el.tagName === 'P' || el.tagName === 'UL');
   }
 
   function readExplanationsFromRow(rowEl) {
@@ -144,13 +222,10 @@
   }
 
   function readBlockFromRow(rowEl) {
-    const p = getTextParagraph(rowEl);
-    const { text, boldRanges } = domToTextModel(p);
     const img = rowEl.querySelector('.content-row-photo');
     return {
       id: rowEl.dataset.blockId,
-      text,
-      boldRanges,
+      paragraphs: domToParagraphsModel(getTextBlockEls(rowEl)),
       image: { src: img ? img.getAttribute('src') : '', alt: img ? img.getAttribute('alt') : '' },
       explanations: readExplanationsFromRow(rowEl),
       updatedAt: new Date().toISOString(),
@@ -167,20 +242,24 @@
       img.setAttribute('alt', block.image.alt || '');
     }
 
-    const existingTextHost = rowEl.querySelector('.content-row-text, .content-row-text-group');
+    const existingTextHost = rowEl.querySelector(':scope > .content-row-text, :scope > .content-row-text-group, :scope > .content-row-text-lines');
     if (!existingTextHost) {
       console.error(`content-editor: block ${block.id} has no text host to replace`);
       return;
     }
 
-    const p = document.createElement('p');
-    p.appendChild(renderTextWithBold(block.text, block.boldRanges));
+    const isSimple = block.paragraphs.length === 1 && block.paragraphs[0].type === 'p' && block.explanations.length === 0;
 
     let newTextHost;
-    if (block.explanations.length > 0) {
+    if (isSimple) {
+      const p = document.createElement('p');
+      p.className = 'content-row-text';
+      p.appendChild(renderTextWithBold(block.paragraphs[0].text, block.paragraphs[0].boldRanges));
+      newTextHost = p;
+    } else {
       newTextHost = document.createElement('div');
       newTextHost.className = 'content-row-text-group';
-      newTextHost.appendChild(p);
+      newTextHost.appendChild(renderParagraphsToDom(block.paragraphs));
       block.explanations.forEach((ex) => {
         const def = document.createElement('div');
         def.className = 'content-definition';
@@ -193,9 +272,6 @@
         def.appendChild(span);
         newTextHost.appendChild(def);
       });
-    } else {
-      p.className = 'content-row-text';
-      newTextHost = p;
     }
 
     existingTextHost.replaceWith(newTextHost);
@@ -254,15 +330,21 @@
   const explanationList = document.getElementById('editor-explanation-list');
   const explanationHint = document.getElementById('editor-explanation-hint');
 
+  // Enter creates a new <p> (rather than Chrome's default <div>) and the list-toggle button
+  // below relies on the browser's own native, well-tested handling of splitting/merging
+  // paragraphs and list items — reimplementing that with manual Range surgery would be a lot
+  // more code to reproduce what the browser already does correctly.
+  document.execCommand('defaultParagraphSeparator', false, 'p');
+
   function renderTextTab() {
     textHost.innerHTML = '';
-    textHost.appendChild(renderTextWithBold(workingCopy.text, workingCopy.boldRanges));
+    textHost.appendChild(renderParagraphsToDom(workingCopy.paragraphs));
   }
 
   function commitTextTab() {
-    const { text, boldRanges } = domToTextModel(textHost);
-    workingCopy.text = text;
-    workingCopy.boldRanges = boldRanges;
+    normalizeTextHost();
+    const blockEls = Array.from(textHost.children).filter((el) => el.tagName === 'P' || el.tagName === 'UL');
+    workingCopy.paragraphs = domToParagraphsModel(blockEls);
     syncExplanationsWithBoldTerms(workingCopy);
   }
 
@@ -293,8 +375,9 @@
   function renderImageTab() {
     imageCurrentEl.src = workingCopy.image.src;
     imageCurrentEl.alt = workingCopy.image.alt;
-    imageSearchInput.value = workingCopy.text;
-    renderImageResults(workingCopy.text);
+    const text = plainTextOf(workingCopy);
+    imageSearchInput.value = text;
+    renderImageResults(text);
   }
 
   function renderExplanationTab() {
@@ -323,7 +406,9 @@
         // The pairing is structural (a bold term always has an explanation), so removing an
         // explanation un-bolds its term in the text rather than leaving an orphaned bold word.
         const term = ex.term;
-        workingCopy.boldRanges = workingCopy.boldRanges.filter(([s, e]) => workingCopy.text.slice(s, e) !== term);
+        allTextUnits(workingCopy).forEach((unit) => {
+          unit.boldRanges = unit.boldRanges.filter(([s, e]) => unit.text.slice(s, e) !== term);
+        });
         syncExplanationsWithBoldTerms(workingCopy);
         renderTextTab();
         renderExplanationTab();
@@ -408,15 +493,30 @@
     renderExplanationTab();
   });
 
+  document.getElementById('editor-toggle-list').addEventListener('click', () => {
+    textHost.focus();
+    document.execCommand('insertUnorderedList');
+    commitTextTab();
+  });
+
   textHost.addEventListener('keydown', (e) => {
-    // The data model has no line-break representation — only plain text plus bold ranges —
-    // so block-level elements from a default Enter would silently corrupt the text on save.
-    if (e.key === 'Enter') e.preventDefault();
+    // Invoked explicitly rather than left to the browser's default Enter handling, so
+    // paragraph creation is deterministic and doesn't depend on defaultParagraphSeparator
+    // having taken effect for this particular keystroke.
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.execCommand('insertParagraph');
+      commitTextTab();
+    }
   });
 
   textHost.addEventListener('paste', (e) => {
     e.preventDefault();
-    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    const raw = (e.clipboardData || window.clipboardData).getData('text/plain');
+    // This editor's paragraph breaks are structural (separate <p>/<li> elements), not inline
+    // characters, so a pasted multi-line string collapses onto one line rather than leaving
+    // raw, non-rendering newline characters sitting inside a single paragraph.
+    const text = raw.replace(/\r?\n+/g, ' ');
     const sel = window.getSelection();
     if (!sel.rangeCount) return;
     const range = sel.getRangeAt(0);
