@@ -587,6 +587,7 @@
    the ".content-definition span { flex: 1 }" rule above, which would otherwise also
    match this span and make it share the row's width 50/50 with the definition text. */
 .content-definition .content-definition-emoji { font-size: 24px; line-height: 32px; flex: none; }
+.content-definition-icon { width: 24px; height: 24px; flex: none; }
 
 .edit-btn {
   position: absolute; top: var(--space-4); right: var(--space-4);
@@ -689,8 +690,28 @@
 .image-edit-trigger img { filter: invert(1); }
 
 .content-row-edit-body { display: flex; flex-direction: column; gap: var(--space-3); flex: 1; min-width: 0; }
-.row-editor-toolbar { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
-.row-editor-actions { margin-top: var(--space-2); padding-top: var(--space-4); }
+.row-editor-actions {
+  margin-top: var(--space-2); padding-top: var(--space-4);
+  justify-content: space-between; align-items: center;
+}
+.row-editor-actions-left { display: flex; gap: var(--space-3); align-items: center; }
+.btn-icon { width: 16px; height: 16px; flex-shrink: 0; }
+/* Inverts the icon's dark stroke/fill to read as white against a filled dark button —
+   same trick used for .image-edit-trigger's icon on its dark circular background. */
+.icon-invert { filter: invert(1); }
+
+.row-overflow-btn {
+  width: 48px; height: 48px; border-radius: var(--radius-pill); flex-shrink: 0;
+  background: var(--bg-800); color: var(--text-inverted); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.row-overflow-btn:hover { background: var(--teal-900); }
+.row-overflow-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.row-overflow-menu { width: 240px; }
+.menu-item-danger span { color: var(--rose-600); }
+.menu-item-danger svg { color: var(--rose-600); }
+.menu-divider { height: 1px; background: var(--divider-default); margin: var(--space-2) 0; }
 
 .content-row--heading, .content-row--subheading { min-height: 0; justify-content: flex-start; align-items: center; }
 .content-row-heading-text { margin: 0; flex: 1; }
@@ -701,7 +722,7 @@
   outline-color: var(--focus);
 }
 
-.image-popover, .add-menu-popover { position: fixed; z-index: 20; }
+.image-popover, .add-menu-popover, .row-overflow-menu { position: fixed; z-index: 20; }
 .image-popover { width: 320px; }
 .add-menu-popover { width: 220px; }
 

@@ -56,6 +56,31 @@
     }
   }
 
+  // Deleting a block only removes it from the live DOM and the edit store — the block's
+  // markup still exists in the static HTML, so a plain reload would silently bring it right
+  // back. A separate tombstone list, applied after every edit-patch pass in
+  // patchRowsFromStorage(), is what makes a deletion actually stick.
+  const DELETED_KEY = `${STORAGE_KEY}:deleted`;
+
+  function loadDeletedIds() {
+    try {
+      const raw = localStorage.getItem(DELETED_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function markBlockDeleted(id) {
+    const deleted = loadDeletedIds();
+    if (!deleted.includes(id)) deleted.push(id);
+    try {
+      localStorage.setItem(DELETED_KEY, JSON.stringify(deleted));
+    } catch (e) {
+      console.warn('Could not persist block deletion:', e);
+    }
+  }
+
   // ---------- DOM <-> inline text model (a single paragraph or list item's own content) ----------
 
   function domToTextModel(containerEl) {
@@ -181,13 +206,15 @@
   }
 
   // Keeps `explanations` structurally in sync with the current bold terms: a term that's no
-  // longer bold loses its explanation, a newly-bolded term gets a blank one to fill in. This is
-  // what enforces "each explanation corresponds to a bolded word" as a rule of the data, not
-  // just a convention the UI has to remember to honor.
+  // longer bold loses its explanation, a newly-bolded term gets a blank one to fill in. This
+  // enforces "a bolded word always has an explanation" as a rule of the data, not just a
+  // convention the UI has to remember to honor. Explanations with no term at all (added
+  // standalone, not tied to any bolded word — not every piece of key information relates to
+  // a highlighted word) are left untouched here; only term-linked entries get reconciled.
   function syncExplanationsWithBoldTerms(block) {
     const terms = boldTermsOf(block);
-    const kept = block.explanations.filter((ex) => terms.includes(ex.term));
-    const keptTerms = kept.map((ex) => ex.term);
+    const kept = block.explanations.filter((ex) => ex.term === '' || terms.includes(ex.term));
+    const keptTerms = kept.filter((ex) => ex.term !== '').map((ex) => ex.term);
     terms.forEach((term) => {
       if (!keptTerms.includes(term)) {
         kept.push({ term, definition: '' });
@@ -285,12 +312,25 @@
       block.explanations.forEach((ex) => {
         const def = document.createElement('div');
         def.className = 'content-definition';
-        const emoji = document.createElement('span');
-        emoji.className = 'content-definition-emoji';
-        emoji.innerHTML = '&#128161;';
+        // A term-linked explanation (💡) reads as "here's what this bolded word means" —
+        // misleading for a standalone note that isn't tied to any highlighted word, so those
+        // get an info icon instead.
+        if (ex.term) {
+          const emoji = document.createElement('span');
+          emoji.className = 'content-definition-emoji';
+          emoji.innerHTML = '&#128161;';
+          def.appendChild(emoji);
+        } else {
+          const icon = document.createElement('img');
+          icon.className = 'content-definition-icon';
+          icon.src = 'assets/icons/info.svg';
+          icon.alt = '';
+          icon.width = 24;
+          icon.height = 24;
+          def.appendChild(icon);
+        }
         const span = document.createElement('span');
         span.appendChild(boldFirstOccurrence(ex.definition, ex.term));
-        def.appendChild(emoji);
         def.appendChild(span);
         newTextHost.appendChild(def);
       });
@@ -309,6 +349,10 @@
   function patchRowsFromStorage() {
     const store = loadStore();
     Object.keys(store).forEach((id) => writeBlockToDom(store[id]));
+    loadDeletedIds().forEach((id) => {
+      const rowEl = document.querySelector(`.content-row[data-block-id="${id}"]`);
+      if (rowEl) removeBlockFromDom(rowEl);
+    });
   }
 
   // ---------- Inline edit state machine ----------
@@ -360,18 +404,31 @@
     });
   }
 
+  // Shared by both edit surfaces: Cancel/Save on the left, a "..." overflow trigger on the
+  // right (Add a list / Add explanation / Delete section — the first two hidden for heading
+  // rows, which support neither). Icons reuse the project's existing SVGs; check.svg is
+  // inverted to read as white against the filled Save button, matching how .image-edit-trigger
+  // already inverts its icon against a dark circular background elsewhere in this file's CSS.
+  function buildActionsBar() {
+    const actions = document.createElement('div');
+    actions.className = 'row-editor-actions dialog-actions';
+    actions.innerHTML = `
+      <div class="row-editor-actions-left">
+        <button type="button" class="btn btn-outlined" data-action="cancel-edit">Cancel <img class="btn-icon" src="assets/icons/close.svg" alt="" width="16" height="16"></button>
+        <button type="button" class="btn btn-filled" data-action="save-edit">Save <img class="btn-icon icon-invert" src="assets/icons/check.svg" alt="" width="16" height="16"></button>
+      </div>
+      <button type="button" class="row-overflow-btn" data-action="toggle-overflow" aria-label="More options" aria-haspopup="true" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>
+      </button>
+    `;
+    return actions;
+  }
+
   function buildTextEditSurface(rowEl) {
     const existingTextHost = rowEl.querySelector(':scope > .content-row-text, :scope > .content-row-text-group, :scope > .content-row-text-lines');
 
     const body = document.createElement('div');
     body.className = 'content-row-edit-body';
-
-    const toolbar = document.createElement('div');
-    toolbar.className = 'row-editor-toolbar';
-    toolbar.innerHTML = `
-      <button type="button" class="btn btn-outlined" data-action="mark-term" style="min-height:40px; padding: var(--space-2) var(--space-4);">Mark as defined term</button>
-      <button type="button" class="btn btn-outlined" data-action="toggle-list" style="min-height:40px; padding: var(--space-2) var(--space-4);">Bulleted list</button>
-    `;
 
     const textHost = document.createElement('div');
     textHost.className = 'content-row-text-group editor-contenteditable';
@@ -384,24 +441,16 @@
 
     const hint = document.createElement('p');
     hint.className = 'field-hint';
-    hint.textContent = 'Press Enter for a new paragraph. Select text and press Cmd/Ctrl+B (or use the button) to mark it as a defined term. Type "- " or "• " to start a bulleted list.';
+    hint.textContent = 'Press Enter for a new paragraph. Select text and press Cmd/Ctrl+B to mark it as a defined term. Type "- " or "• " to start a bulleted list.';
 
     const explanations = document.createElement('div');
     explanations.className = 'editor-explanation-list';
     explanations.setAttribute('data-row-explanations', '');
 
-    const actions = document.createElement('div');
-    actions.className = 'row-editor-actions dialog-actions';
-    actions.innerHTML = `
-      <button type="button" class="btn btn-link" data-action="cancel-edit">Cancel</button>
-      <button type="button" class="btn btn-filled" data-action="save-edit">Save changes</button>
-    `;
-
-    body.appendChild(toolbar);
     body.appendChild(textHost);
     body.appendChild(hint);
     body.appendChild(explanations);
-    body.appendChild(actions);
+    body.appendChild(buildActionsBar());
 
     if (existingTextHost) existingTextHost.replaceWith(body);
     else rowEl.insertBefore(body, rowEl.querySelector('.edit-btn'));
@@ -415,13 +464,7 @@
     headingEl.contentEditable = 'true';
     headingEl.setAttribute('data-row-text-host', '');
 
-    const actions = document.createElement('div');
-    actions.className = 'row-editor-actions dialog-actions';
-    actions.innerHTML = `
-      <button type="button" class="btn btn-link" data-action="cancel-edit">Cancel</button>
-      <button type="button" class="btn btn-filled" data-action="save-edit">Save changes</button>
-    `;
-    rowEl.insertBefore(actions, rowEl.querySelector('.edit-btn'));
+    rowEl.insertBefore(buildActionsBar(), rowEl.querySelector('.edit-btn'));
     headingEl.focus();
   }
 
@@ -430,6 +473,7 @@
     if (activeRowEl === rowEl) return;
     closeImagePopover();
     closeAddMenu();
+    closeOverflowMenu();
 
     activeRowEl = rowEl;
     activeIsNewBlock = !!isNew;
@@ -441,6 +485,22 @@
     else buildTextEditSurface(rowEl);
   }
 
+  // Shared by "cancel a just-inserted block" and "delete an existing one" — both need to
+  // remove the row plus its trailing spacer so the "every row owns exactly one trailing
+  // between-section" invariant repagination relies on stays intact.
+  function removeBlockFromDom(rowEl) {
+    const trailingBetween = rowEl.nextElementSibling;
+    if (trailingBetween && trailingBetween.matches('.between-section')) trailingBetween.remove();
+    rowEl.remove();
+  }
+
+  function clearActiveEditState() {
+    activeRowEl = null;
+    workingCopy = null;
+    originalSnapshot = null;
+    activeIsNewBlock = false;
+  }
+
   function exitEditMode(mode) {
     if (!activeRowEl) return;
     const rowEl = activeRowEl;
@@ -450,13 +510,8 @@
     // meaningful to revert to, and leaving placeholder text like "New heading" sitting in
     // the document would look like a stray, broken block.
     if (mode === 'cancel' && activeIsNewBlock) {
-      const trailingBetween = rowEl.nextElementSibling;
-      if (trailingBetween && trailingBetween.matches('.between-section')) trailingBetween.remove();
-      rowEl.remove();
-      activeRowEl = null;
-      workingCopy = null;
-      originalSnapshot = null;
-      activeIsNewBlock = false;
+      removeBlockFromDom(rowEl);
+      clearActiveEditState();
       document.dispatchEvent(new CustomEvent('contentblocks:changed'));
       return;
     }
@@ -485,10 +540,30 @@
     const headingEl = rowEl.querySelector('.content-row-heading-text');
     if (headingEl) { headingEl.contentEditable = 'false'; headingEl.removeAttribute('data-row-text-host'); }
 
-    activeRowEl = null;
-    workingCopy = null;
-    originalSnapshot = null;
-    activeIsNewBlock = false;
+    clearActiveEditState();
+    document.dispatchEvent(new CustomEvent('contentblocks:changed'));
+  }
+
+  // Deletes the block currently being edited outright — no confirmation step, matching the
+  // approved design. Removes it from localStorage too (unlike cancelling a fresh insert,
+  // this block may already have been saved in an earlier session).
+  function deleteActiveBlock() {
+    if (!activeRowEl) return;
+    const rowEl = activeRowEl;
+    const id = rowEl.dataset.blockId;
+    removeBlockFromDom(rowEl);
+    const store = loadStore();
+    if (id in store) {
+      delete store[id];
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      } catch (e) {
+        console.warn('Could not update localStorage after deleting a block:', e);
+      }
+    }
+    markBlockDeleted(id);
+    clearActiveEditState();
+    closeOverflowMenu();
     document.dispatchEvent(new CustomEvent('contentblocks:changed'));
   }
 
@@ -536,6 +611,7 @@
   function openImagePopover(triggerEl, rowEl) {
     if (activeRowEl !== rowEl) enterEditMode(rowEl);
     closeAddMenu();
+    closeOverflowMenu();
     imagePopoverRowEl = rowEl;
     const query = plainTextOf(workingCopy);
     imagePopoverSearch.value = query;
@@ -567,6 +643,7 @@
 
   function openAddMenu(triggerEl, betweenEl) {
     closeImagePopover();
+    closeOverflowMenu();
     addMenuBetweenEl = betweenEl;
     addMenu.hidden = false;
     positionPopover(addMenu, triggerEl);
@@ -575,6 +652,46 @@
   function closeAddMenu() {
     addMenu.hidden = true;
     addMenuBetweenEl = null;
+  }
+
+  // ---------- Row overflow menu (Add a list / Add explanation / Delete section) ----------
+
+  const overflowMenu = document.getElementById('row-overflow-menu');
+
+  function openOverflowMenu(triggerEl) {
+    closeImagePopover();
+    closeAddMenu();
+    const isText = !!workingCopy && workingCopy.type === 'text';
+    overflowMenu.querySelector('[data-action="toggle-list"]').hidden = !isText;
+    overflowMenu.querySelector('[data-action="add-explanation"]').hidden = !isText;
+    overflowMenu.hidden = false;
+    positionPopover(overflowMenu, triggerEl);
+    triggerEl.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeOverflowMenu() {
+    if (overflowMenu.hidden) return;
+    overflowMenu.hidden = true;
+    document.querySelectorAll('[data-action="toggle-overflow"][aria-expanded="true"]').forEach((el) => el.setAttribute('aria-expanded', 'false'));
+  }
+
+  // The single "Add explanation" action does one of two things depending on whether text is
+  // currently selected: with a selection, it bolds it and creates its paired explanation
+  // (the same mechanic as markSelectionAsTerm/Cmd+B); with none, it adds a blank standalone
+  // explanation not tied to any word — not everything worth explaining is a defined term.
+  function addExplanation() {
+    if (!activeRowEl || !workingCopy || workingCopy.type !== 'text') return;
+    const textHost = activeRowEl.querySelector('[data-row-text-host]');
+    const sel = window.getSelection();
+    const hasSelection = textHost && sel.rangeCount > 0 && !sel.isCollapsed
+      && textHost.contains(sel.getRangeAt(0).commonAncestorContainer);
+    if (hasSelection) {
+      markSelectionAsTerm();
+    } else {
+      workingCopy.explanations.push({ term: '', definition: '' });
+      renderRowExplanations();
+    }
+    closeOverflowMenu();
   }
 
   function nextBlockId() {
@@ -648,9 +765,22 @@
       return;
     }
 
-    const markTermBtn = e.target.closest('[data-action="mark-term"]');
-    if (markTermBtn) {
-      markSelectionAsTerm();
+    const overflowTrigger = e.target.closest('[data-action="toggle-overflow"]');
+    if (overflowTrigger) {
+      if (overflowMenu.hidden) openOverflowMenu(overflowTrigger);
+      else closeOverflowMenu();
+      return;
+    }
+
+    const addExplanationBtn = e.target.closest('[data-action="add-explanation"]');
+    if (addExplanationBtn) {
+      addExplanation();
+      return;
+    }
+
+    const deleteBtn = e.target.closest('[data-action="delete-section"]');
+    if (deleteBtn) {
+      deleteActiveBlock();
       return;
     }
 
@@ -662,6 +792,7 @@
         document.execCommand('insertUnorderedList');
         commitActiveText();
       }
+      closeOverflowMenu();
       return;
     }
 
@@ -702,6 +833,7 @@
     // position:fixed siblings of everything else, so this is a safe global check).
     if (imagePopover && !imagePopover.hidden && !imagePopover.contains(e.target) && !e.target.closest('[data-image-trigger]')) closeImagePopover();
     if (addMenu && !addMenu.hidden && !addMenu.contains(e.target) && !e.target.closest('.add-btn, [data-add-trigger]')) closeAddMenu();
+    if (overflowMenu && !overflowMenu.hidden && !overflowMenu.contains(e.target) && !e.target.closest('[data-action="toggle-overflow"]')) closeOverflowMenu();
   });
 
   document.addEventListener('input', (e) => {
@@ -715,6 +847,7 @@
     if (e.key === 'Escape') {
       if (addMenu && !addMenu.hidden) { closeAddMenu(); return; }
       if (imagePopover && !imagePopover.hidden) { closeImagePopover(); return; }
+      if (overflowMenu && !overflowMenu.hidden) { closeOverflowMenu(); return; }
       if (activeRowEl) { exitEditMode('cancel'); return; }
       return;
     }
