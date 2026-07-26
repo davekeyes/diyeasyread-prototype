@@ -717,12 +717,12 @@
    stroke pink instead of white. Same fix as .image-edit-trigger img above. */
 .icon-invert { filter: brightness(0) invert(1); }
 
-/* Light at rest (same recipe as .icon-fab), filled dark only on hover or while its menu is
-   open — it was previously filled dark unconditionally, which read as permanently pressed. */
+/* Transparent at rest, filled dark only on hover or while its menu is open — it was
+   previously filled (and shadowed) unconditionally, which read as permanently pressed. */
 .row-overflow-btn {
   width: 48px; height: 48px; border-radius: var(--radius-pill); flex-shrink: 0;
-  background: var(--sand-000); color: var(--fg-primary); border: none; cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 35, 43, 0.06), 0 4px 8px rgba(0, 35, 43, 0.06);
+  background: none; color: var(--fg-primary); border: none; cursor: pointer;
+  box-shadow: none;
   display: flex; align-items: center; justify-content: center;
   transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
 }

@@ -180,6 +180,25 @@
       const wrapper = list.parentElement;
       if (wrapper.parentElement === host) wrapper.replaceWith(list);
     });
+
+    // Native contenteditable edits (e.g. Backspace merging content across a list boundary)
+    // can leave stray top-level nodes that are neither <p> nor <ul> — a bare <div>, a loose
+    // text node, a trailing <br>. commitActiveText only reads <p>/<ul> children, so anything
+    // else used to be silently dropped — losing that text on the next Save, and, via
+    // syncExplanationsWithBoldTerms, any explanation tied to a bolded term inside it. Wrap any
+    // run of such nodes into a <p> instead of losing them.
+    let runP = null;
+    Array.from(host.childNodes).forEach((node) => {
+      const isValidBlock = node.nodeType === Node.ELEMENT_NODE && (node.tagName === 'P' || node.tagName === 'UL');
+      if (isValidBlock) { runP = null; return; }
+      if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR' && !node.nextSibling) { node.remove(); return; }
+      if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim() && !runP) { node.remove(); return; }
+      if (!runP) {
+        runP = document.createElement('p');
+        host.insertBefore(runP, node);
+      }
+      runP.appendChild(node);
+    });
   }
 
   // Every {text, boldRanges} unit across all paragraphs and list items, in document order —
@@ -921,7 +940,47 @@
     if (e.key === ' ') {
       startBulletListFromMarker(e);
     }
+
+    if (e.key === 'Backspace') {
+      handleListOutdentOnBackspace(e);
+    }
   });
+
+  // Backspace at the very start of a list item's content converts it back into a plain
+  // paragraph — mirroring startBulletListFromMarker's direct-DOM approach rather than relying
+  // on the browser's own list-outdent behavior, which isn't consistent enough across engines
+  // to trust (that inconsistency is what left stray nodes for normalizeTextHost to clean up).
+  function handleListOutdentOnBackspace(e) {
+    if (!workingCopy || workingCopy.type !== 'text') return;
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const node = range.startContainer.nodeType === Node.TEXT_NODE
+      ? range.startContainer.parentElement
+      : range.startContainer;
+    const li = node && node.closest && node.closest('li');
+    if (!li) return;
+    const ul = li.parentElement;
+    if (!ul || ul.tagName !== 'UL' || li.previousElementSibling) return;
+
+    const preRange = document.createRange();
+    preRange.setStart(li, 0);
+    preRange.setEnd(range.startContainer, range.startOffset);
+    if (preRange.toString() !== '') return;
+
+    e.preventDefault();
+    const p = document.createElement('p');
+    while (li.firstChild) p.appendChild(li.firstChild);
+    if (ul.children.length === 1) ul.replaceWith(p);
+    else { ul.parentElement.insertBefore(p, ul); li.remove(); }
+
+    const freshRange = document.createRange();
+    freshRange.selectNodeContents(p);
+    freshRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(freshRange);
+    commitActiveText();
+  }
 
   // Typing "-" or "•" as the very first character of an empty paragraph, then a space,
   // converts that paragraph into a bulleted list item (the marker character itself is
