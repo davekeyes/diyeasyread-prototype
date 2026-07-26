@@ -14,7 +14,7 @@
     <img src="assets/icons/close.svg" alt="" width="20" height="20">
   </button>
   <div class="menu-anchor">
-    <button class="icon-fab" id="doc-menu-toggle" aria-label="More options">
+    <button class="icon-fab" id="doc-menu-toggle" aria-label="More options" aria-haspopup="true" aria-expanded="false">
       <img src="assets/icons/settings.svg" alt="" width="20" height="20">
     </button>
     <div class="menu-dropdown doc-menu" id="doc-menu" hidden>
@@ -39,11 +39,6 @@
         <span>Dark mode</span>
       </button>
     </div>
-  </div>
-
-  <div class="preview-head">
-    <span class="translate-filename">story_of_dorothy2026.pdf</span>
-    <h2>Your Easy Read pages</h2>
   </div>
 
   <div class="doc-pages">
@@ -344,9 +339,15 @@
 <script>
   const menuToggle = document.getElementById('doc-menu-toggle');
   const menu = document.getElementById('doc-menu');
-  menuToggle.addEventListener('click', () => { menu.hidden = !menu.hidden; });
+  menuToggle.addEventListener('click', () => {
+    menu.hidden = !menu.hidden;
+    menuToggle.setAttribute('aria-expanded', String(!menu.hidden));
+  });
   document.addEventListener('click', (e) => {
-    if (!menuToggle.contains(e.target) && !menu.contains(e.target)) menu.hidden = true;
+    if (!menuToggle.contains(e.target) && !menu.contains(e.target)) {
+      menu.hidden = true;
+      menuToggle.setAttribute('aria-expanded', 'false');
+    }
   });
 
   const darkToggle = document.getElementById('dark-toggle');
