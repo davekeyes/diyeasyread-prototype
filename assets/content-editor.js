@@ -574,6 +574,7 @@
   const imagePopoverGrid = document.getElementById('image-popover-grid');
   const imagePopoverUploadInput = document.getElementById('image-popover-upload-input');
   let imagePopoverRowEl = null;
+  let imagePopoverTriggerEl = null;
 
   function positionPopover(popoverEl, triggerEl) {
     const rect = triggerEl.getBoundingClientRect();
@@ -584,6 +585,19 @@
     popoverEl.style.left = `${left}px`;
     popoverEl.style.top = `${rect.bottom + 8}px`;
   }
+
+  // These popovers are position:fixed (deliberately — see openImagePopover/openAddMenu),
+  // so they don't move with the page on their own the way a position:absolute element
+  // anchored in normal flow would. Re-running positionPopover against each one's stored
+  // trigger element on every scroll/resize keeps whichever is open visually attached to its
+  // trigger instead of drifting away as the page scrolls underneath it.
+  function repositionOpenPopovers() {
+    if (imagePopover && !imagePopover.hidden && imagePopoverTriggerEl) positionPopover(imagePopover, imagePopoverTriggerEl);
+    if (addMenu && !addMenu.hidden && addMenuTriggerEl) positionPopover(addMenu, addMenuTriggerEl);
+    if (overflowMenu && !overflowMenu.hidden && overflowMenuTriggerEl) positionPopover(overflowMenu, overflowMenuTriggerEl);
+  }
+  window.addEventListener('scroll', repositionOpenPopovers, { passive: true, capture: true });
+  window.addEventListener('resize', repositionOpenPopovers, { passive: true });
 
   function renderImagePopoverResults(query) {
     imagePopoverGrid.innerHTML = '';
@@ -613,6 +627,7 @@
     closeAddMenu();
     closeOverflowMenu();
     imagePopoverRowEl = rowEl;
+    imagePopoverTriggerEl = triggerEl;
     const query = plainTextOf(workingCopy);
     imagePopoverSearch.value = query;
     renderImagePopoverResults(query);
@@ -626,6 +641,7 @@
     imagePopover.hidden = true;
     document.querySelectorAll('[data-image-trigger][aria-expanded="true"]').forEach((el) => el.setAttribute('aria-expanded', 'false'));
     imagePopoverRowEl = null;
+    imagePopoverTriggerEl = null;
   }
 
   function pickImage(src, alt) {
@@ -640,11 +656,13 @@
 
   const addMenu = document.getElementById('add-block-menu');
   let addMenuBetweenEl = null;
+  let addMenuTriggerEl = null;
 
   function openAddMenu(triggerEl, betweenEl) {
     closeImagePopover();
     closeOverflowMenu();
     addMenuBetweenEl = betweenEl;
+    addMenuTriggerEl = triggerEl;
     addMenu.hidden = false;
     positionPopover(addMenu, triggerEl);
   }
@@ -652,11 +670,13 @@
   function closeAddMenu() {
     addMenu.hidden = true;
     addMenuBetweenEl = null;
+    addMenuTriggerEl = null;
   }
 
   // ---------- Row overflow menu (Add a list / Add explanation / Delete section) ----------
 
   const overflowMenu = document.getElementById('row-overflow-menu');
+  let overflowMenuTriggerEl = null;
 
   function openOverflowMenu(triggerEl) {
     closeImagePopover();
@@ -664,6 +684,7 @@
     const isText = !!workingCopy && workingCopy.type === 'text';
     overflowMenu.querySelector('[data-action="toggle-list"]').hidden = !isText;
     overflowMenu.querySelector('[data-action="add-explanation"]').hidden = !isText;
+    overflowMenuTriggerEl = triggerEl;
     overflowMenu.hidden = false;
     positionPopover(overflowMenu, triggerEl);
     triggerEl.setAttribute('aria-expanded', 'true');
@@ -673,6 +694,7 @@
     if (overflowMenu.hidden) return;
     overflowMenu.hidden = true;
     document.querySelectorAll('[data-action="toggle-overflow"][aria-expanded="true"]').forEach((el) => el.setAttribute('aria-expanded', 'false'));
+    overflowMenuTriggerEl = null;
   }
 
   // The single "Add explanation" action does one of two things depending on whether text is
