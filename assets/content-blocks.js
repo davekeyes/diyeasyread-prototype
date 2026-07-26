@@ -95,22 +95,24 @@ function repaginateContentPages() {
   const rowCapacity = fullHeight - reservedForPageNum;
 
   const buckets = [[]];
-  let currentHeight = 0;
+  let rowHeightSoFar = 0;
   groups.forEach((group) => {
     const rowEl = group.find((el) => el.matches('.content-row'));
     const rowHeight = rowEl ? rowEl.getBoundingClientRect().height : 0;
-    const totalHeight = group.reduce((sum, item) => sum + item.getBoundingClientRect().height, 0);
 
-    // Only the row itself has to clear the page-number safe zone — its trailing
-    // between-section is allowed to sit within that margin, since the "+" button it
-    // holds is centered in the row's width and never reaches the left edge where the
-    // page number lives, so there's no real visual collision.
-    if (currentHeight > 0 && currentHeight + rowHeight > rowCapacity) {
+    // Only rows count toward a page's capacity — between-sections (leading or trailing,
+    // synthesized or natural) always tag along for free, since they're safe to sit in the
+    // reserved page-number margin regardless of which page they land on. Counting a
+    // between-section's height here would shrink a page's real row budget depending on
+    // whether it happens to start with one, which is exactly what made the first content
+    // page (the only one whose leading spacer isn't synthesized after the fact) fit one
+    // fewer row than every other page for no visible reason.
+    if (rowHeight > 0 && rowHeightSoFar > 0 && rowHeightSoFar + rowHeight > rowCapacity) {
       buckets.push([]);
-      currentHeight = 0;
+      rowHeightSoFar = 0;
     }
     buckets[buckets.length - 1].push(...group);
-    currentHeight += totalHeight;
+    rowHeightSoFar += rowHeight;
   });
 
   // Every non-first page needs its own leading spacer — it's both the "+" control at that
