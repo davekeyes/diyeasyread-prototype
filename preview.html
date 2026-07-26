@@ -206,9 +206,25 @@
   </div>
 </div>
 
+<dialog class="dialog" id="upgrade-dialog" aria-labelledby="upgrade-dialog-title">
+  <button type="button" class="icon-fab close" aria-label="Close" data-action="cancel">
+    <img src="assets/icons/close.svg" alt="" width="20" height="20">
+  </button>
+  <h2 class="dialog-title" id="upgrade-dialog-title">Preview only</h2>
+  <p>This is a read-only preview. Buy or subscribe to save your changes, edit content, and download your Easy Read document.</p>
+  <div class="dialog-actions">
+    <button type="button" class="btn btn-link" data-action="cancel">Continue previewing</button>
+    <a class="btn btn-filled" href="dashboard.html">Buy or subscribe</a>
+  </div>
+</dialog>
+
 <script>
-  document.querySelectorAll('[data-nudge-signup]').forEach((btn) => {
-    btn.addEventListener('click', () => { window.location.href = 'dashboard.html'; });
+  const upgradeDialog = document.getElementById('upgrade-dialog');
+  document.querySelectorAll('[data-nudge-signup], .add-btn').forEach((btn) => {
+    btn.addEventListener('click', () => upgradeDialog.showModal());
+  });
+  upgradeDialog.querySelectorAll('[data-action="cancel"]').forEach((btn) => {
+    btn.addEventListener('click', () => upgradeDialog.close());
   });
 </script>
 <script src="assets/content-blocks.js"></script>
