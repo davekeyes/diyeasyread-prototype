@@ -382,6 +382,10 @@
     textHost.setAttribute('data-row-text-host', '');
     textHost.appendChild(renderParagraphsToDom(workingCopy.paragraphs));
 
+    const hint = document.createElement('p');
+    hint.className = 'field-hint';
+    hint.textContent = 'Press Enter for a new paragraph. Select text and press Cmd/Ctrl+B (or use the button) to mark it as a defined term. Type "- " or "• " to start a bulleted list.';
+
     const explanations = document.createElement('div');
     explanations.className = 'editor-explanation-list';
     explanations.setAttribute('data-row-explanations', '');
@@ -395,6 +399,7 @@
 
     body.appendChild(toolbar);
     body.appendChild(textHost);
+    body.appendChild(hint);
     body.appendChild(explanations);
     body.appendChild(actions);
 
@@ -711,18 +716,76 @@
       if (addMenu && !addMenu.hidden) { closeAddMenu(); return; }
       if (imagePopover && !imagePopover.hidden) { closeImagePopover(); return; }
       if (activeRowEl) { exitEditMode('cancel'); return; }
+      return;
     }
 
-    if (e.key !== 'Enter') return;
     const textHost = e.target.closest('[data-row-text-host]');
     if (!textHost) return;
-    e.preventDefault();
-    if (workingCopy && workingCopy.type === 'text') {
-      document.execCommand('insertParagraph');
-      commitActiveText();
+
+    // Cmd/Ctrl+B is the standard shortcut for this — routes through the same
+    // markSelectionAsTerm() the toolbar button uses (which already no-ops on heading rows,
+    // since workingCopy.type !== 'text' there) rather than letting the browser's native
+    // execCommand('bold') fire, which would produce a <b> tag outside this editor's model.
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      markSelectionAsTerm();
+      return;
     }
-    // Heading rows: Enter is simply suppressed — a heading never wraps into a new paragraph.
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (workingCopy && workingCopy.type === 'text') {
+        document.execCommand('insertParagraph');
+        commitActiveText();
+      }
+      // Heading rows: Enter is simply suppressed — a heading never wraps into a new paragraph.
+      return;
+    }
+
+    if (e.key === ' ') {
+      startBulletListFromMarker(e);
+    }
   });
+
+  // Typing "-" or "•" as the very first character of an empty paragraph, then a space,
+  // converts that paragraph into a bulleted list item (the marker character itself is
+  // consumed, not left behind) — the same shorthand most block-based text editors support.
+  // Deliberately scoped to plain <p> blocks only, never an existing <li>: execCommand
+  // ('insertUnorderedList') toggles, so calling it again inside an existing list item would
+  // remove that item from the list instead of starting a new nested one.
+  function startBulletListFromMarker(e) {
+    if (!workingCopy || workingCopy.type !== 'text') return;
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const container = range.startContainer;
+    // After certain Range mutations (not just direct typing) the cursor's container can be
+    // the block element itself rather than its text node — resolve to the element either
+    // way rather than requiring an exact text-node/offset match. Since this only fires when
+    // the *entire* paragraph is just the marker character (checked below), there's nowhere
+    // else a genuine cursor in that paragraph could be but right after it.
+    const el = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
+    const blockEl = el && el.closest('p');
+    if (!blockEl) return;
+    if (blockEl.textContent !== '-' && blockEl.textContent !== '•') return;
+
+    e.preventDefault();
+    // Direct DOM replacement rather than clearing the paragraph and calling
+    // execCommand('insertUnorderedList') on it — a completely empty block (no text node, no
+    // <br>) isn't a reliable target for that command in every browser; it can end up
+    // converting some other paragraph in the row instead of this exact one. Since blockEl is
+    // already the precise node in hand, replacing it directly removes the ambiguity entirely.
+    const ul = document.createElement('ul');
+    const li = document.createElement('li');
+    ul.appendChild(li);
+    blockEl.replaceWith(ul);
+    const freshRange = document.createRange();
+    freshRange.selectNodeContents(li);
+    freshRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(freshRange);
+    commitActiveText();
+  }
 
   document.addEventListener('paste', (e) => {
     const textHost = e.target.closest('[data-row-text-host]');
