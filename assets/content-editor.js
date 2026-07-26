@@ -390,7 +390,9 @@
     if (!host) return;
     normalizeTextHost(host);
     const blockEls = Array.from(host.children).filter((el) => el.tagName === 'P' || el.tagName === 'UL');
-    workingCopy.paragraphs = domToParagraphsModel(blockEls);
+    // Drop empty paragraphs (a stray blank line left over from pressing Enter one time too
+    // many) rather than persisting them — they'd otherwise render as visible blank space.
+    workingCopy.paragraphs = domToParagraphsModel(blockEls).filter((para) => para.type !== 'p' || para.text.trim() !== '');
     syncExplanationsWithBoldTerms(workingCopy);
   }
 
