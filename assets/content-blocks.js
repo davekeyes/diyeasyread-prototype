@@ -21,22 +21,23 @@ function layoutContentRows() {
 // scratch) rather than an incremental push/pull, so the same logic handles both directions
 // and any number of cascading pages correctly.
 //
-// A `.between-section` is a spacer/add-button bar, not content in its own right, and it
-// always belongs to the row ABOVE it (its "+" is how you insert something right after that
-// row) — so it's grouped as [row, trailing between-section], an atomic unit a page break
-// never splits. This guarantees a page's last visible row always keeps its "+" underneath.
-// Each authored page was originally built with its own leading AND trailing spacer, so once
-// every page's children are flattened into one continuous document, adjacent page seams end
-// up with two spacers back to back — both representing the exact same insertion point. The
-// second one is a duplicate and is discarded (removed from the DOM entirely, not just left
-// unbucketed) rather than kept, which is what previously caused between-sections to land
-// inconsistently — sometimes stranded alone at the top of a page, sometimes doubled up.
+// A `.between-section` is a spacer/add-button bar, not content in its own right. Every row
+// owns the between-section immediately after it as an atomic [row, trailing-between] group a
+// page break never splits — this guarantees a page's last visible row always keeps its "+"
+// underneath. Each authored page was originally built with its own leading AND trailing
+// spacer, so flattening every page together leaves two spacers back to back at each old
+// seam — genuine duplicates representing the same insertion point, not two separate ones —
+// so the second of any such pair is discarded outright rather than kept (keeping both would
+// mean two "+" controls stacked with no row between them). The one exception is a
+// between-section at the very start of the whole document, which has nothing before it and
+// becomes its own standalone leading group. Discarding the seam duplicates does mean most
+// pages lose their own natural leading spacer once repagination runs; chunking (below)
+// synthesizes a fresh one for any page that ends up without one, since every non-first page
+// still needs a leading "+" that also serves as its top margin.
 function groupContentItems(items) {
   const groups = [];
   let i = 0;
 
-  // A between-section at the very start of the whole document has no row above it to
-  // belong to — it's the genuine "add block at the top" spacer and stands alone.
   if (items[i] && items[i].matches('.between-section')) {
     groups.push([items[i]]);
     i += 1;
@@ -110,6 +111,21 @@ function repaginateContentPages() {
     }
     buckets[buckets.length - 1].push(...group);
     currentHeight += totalHeight;
+  });
+
+  // Every non-first page needs its own leading spacer — it's both the "+" control at that
+  // point and the page's top margin, so rows never butt straight against the top edge.
+  // groupContentItems discards the genuine duplicate spacer at each old page seam (rather
+  // than leaving two "+" controls stacked with no row between them), which means most pages
+  // land here without one; a fresh one (cloned from any existing between-section, so it
+  // matches exactly) is synthesized for whichever page needs it.
+  const spacerTemplate = groups.flat().find((el) => el.matches('.between-section'));
+  buckets.forEach((bucket, i) => {
+    if (i === 0 || bucket.length === 0 || bucket[0].matches('.between-section') || !spacerTemplate) return;
+    const spacer = spacerTemplate.cloneNode(true);
+    const img = spacer.querySelector('img');
+    if (img) img.setAttribute('alt', 'Add block at top');
+    bucket.unshift(spacer);
   });
 
   // Create additional content pages if needed, cloning the shell of the last one
