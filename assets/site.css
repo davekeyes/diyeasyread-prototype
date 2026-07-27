@@ -488,18 +488,22 @@
 .icon-fab.close { position: absolute; top: var(--space-4); right: var(--space-4); z-index: 5; }
 .menu-anchor { position: absolute; top: var(--space-4); right: 88px; }
 
-/* The document view's close/options icons sit directly on the page background (not a solid
-   dialog surface), so they stay transparent at rest and only pick up the .icon-fab fill on
-   hover/open — and stay position:fixed so they don't scroll away with the page content. */
-#doc-backdrop > .icon-fab.close, #doc-backdrop .menu-anchor { position: fixed; z-index: 5; }
-#doc-backdrop .icon-fab {
-  background: none; box-shadow: none;
-  transition: background var(--dur-fast) var(--ease-standard);
+/* The document/translating views' close/options icons sit directly on the page background
+   (not a solid dialog surface), so they stay transparent at rest and only pick up the
+   .icon-fab fill on hover/open — and stay position:fixed so they don't scroll away with the
+   page content. */
+#doc-backdrop > .icon-fab.close, #doc-backdrop .menu-anchor,
+.translating-page > .icon-fab { position: fixed; z-index: 5; }
+#doc-backdrop .icon-fab, .translating-page > .icon-fab {
+  background: none; box-shadow: none; color: var(--fg-primary);
+  transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
 }
-#doc-backdrop .icon-fab:hover,
-#doc-backdrop .icon-fab[aria-expanded="true"] { background: var(--bg-800); }
-#doc-backdrop .icon-fab:hover img,
-#doc-backdrop .icon-fab[aria-expanded="true"] img { filter: brightness(0) invert(1); }
+#doc-backdrop .icon-fab:hover, .translating-page > .icon-fab:hover,
+#doc-backdrop .icon-fab[aria-expanded="true"], .translating-page > .icon-fab[aria-expanded="true"] {
+  background: var(--bg-800); color: var(--text-inverted);
+}
+#doc-backdrop .icon-fab:hover img, .translating-page > .icon-fab:hover img,
+#doc-backdrop .icon-fab[aria-expanded="true"] img, .translating-page > .icon-fab[aria-expanded="true"] img { filter: brightness(0) invert(1); }
 
 .menu-dropdown {
   position: absolute; right: 0; top: 36px; width: 200px;
