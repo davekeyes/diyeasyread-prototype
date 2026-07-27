@@ -205,7 +205,7 @@
   // the flat view bold-term tracking and search prefill work against.
   function allTextUnits(block) {
     const units = [];
-    block.paragraphs.forEach((para) => {
+    (block.paragraphs || []).forEach((para) => {
       if (para.type === 'ul') para.items.forEach((item) => units.push(item));
       else units.push(para);
     });
@@ -260,43 +260,85 @@
     });
   }
 
+  // The cover page's title/image/intro are fixed, non-deletable single blocks — not
+  // insertable/removable like a normal content row — but reuse the same .content-row/edit
+  // machinery. .cover-row--title behaves exactly like a heading (single text host, no
+  // bullets/explanations); .cover-row--image has an image and nothing else; .cover-row--intro
+  // is plain paragraphs with no image and no bullets/explanations.
   function isHeadingRow(rowEl) {
-    return rowEl.matches('.content-row--heading, .content-row--subheading');
+    return rowEl.matches('.content-row--heading, .content-row--subheading, .cover-row--title');
+  }
+
+  function isImageOnlyRow(rowEl) {
+    return rowEl.matches('.cover-row--image');
+  }
+
+  // 'text' and 'plain-text' both hold a paragraphs array edited via commitActiveText/Enter —
+  // they differ only in whether an image/explanations/bullets go along with it.
+  function isParagraphBlock(type) {
+    return type === 'text' || type === 'plain-text';
   }
 
   function readBlockFromRow(rowEl) {
     if (isHeadingRow(rowEl)) {
       const headingEl = rowEl.querySelector('.content-row-heading-text');
+      let type = 'subheading';
+      if (rowEl.classList.contains('content-row--heading')) type = 'heading';
+      else if (rowEl.classList.contains('cover-row--title')) type = 'cover-title';
       return {
         id: rowEl.dataset.blockId,
-        type: rowEl.classList.contains('content-row--heading') ? 'heading' : 'subheading',
+        type,
         text: headingEl ? headingEl.textContent : '',
         updatedAt: new Date().toISOString(),
       };
     }
-    const img = rowEl.querySelector('.content-row-photo');
-    return {
+    if (isImageOnlyRow(rowEl)) {
+      const img = rowEl.querySelector('.content-row-photo');
+      return {
+        id: rowEl.dataset.blockId,
+        type: 'cover-image',
+        image: { src: img ? img.getAttribute('src') : '', alt: img ? img.getAttribute('alt') : '' },
+        updatedAt: new Date().toISOString(),
+      };
+    }
+    // The cover intro has no image and no bullets/explanations — everything else about a
+    // plain-text block (paragraphs, bold, contenteditable editing) still applies.
+    const isPlain = rowEl.matches('.cover-row--intro');
+    const block = {
       id: rowEl.dataset.blockId,
-      type: 'text',
+      type: isPlain ? 'plain-text' : 'text',
       paragraphs: domToParagraphsModel(getTextBlockEls(rowEl)),
-      image: { src: img ? img.getAttribute('src') : '', alt: img ? img.getAttribute('alt') : '' },
-      explanations: readExplanationsFromRow(rowEl),
       updatedAt: new Date().toISOString(),
     };
+    if (!isPlain) {
+      const img = rowEl.querySelector('.content-row-photo');
+      block.image = { src: img ? img.getAttribute('src') : '', alt: img ? img.getAttribute('alt') : '' };
+      block.explanations = readExplanationsFromRow(rowEl);
+    }
+    return block;
   }
 
   function writeBlockToDom(block) {
     const rowEl = document.querySelector(`.content-row[data-block-id="${block.id}"]`);
     if (!rowEl) return;
 
-    if (block.type === 'heading' || block.type === 'subheading') {
+    if (block.type === 'heading' || block.type === 'subheading' || block.type === 'cover-title') {
       const headingEl = rowEl.querySelector('.content-row-heading-text');
       if (headingEl) headingEl.textContent = block.text;
       return;
     }
 
+    if (block.type === 'cover-image') {
+      const img = rowEl.querySelector('.content-row-photo');
+      if (img && block.image.src) {
+        img.setAttribute('src', block.image.src);
+        img.setAttribute('alt', block.image.alt || '');
+      }
+      return;
+    }
+
     const img = rowEl.querySelector('.content-row-photo');
-    if (block.image.src) {
+    if (block.image && block.image.src) {
       if (img && img.tagName === 'IMG') {
         img.setAttribute('src', block.image.src);
         img.setAttribute('alt', block.image.alt || '');
@@ -316,7 +358,11 @@
     // static text host.
     const existingTextHost = rowEl.querySelector(':scope > .content-row-text, :scope > .content-row-text-group, :scope > .content-row-text-lines, :scope > .content-row-edit-body');
 
-    const isSimple = block.paragraphs.length === 1 && block.paragraphs[0].type === 'p' && block.explanations.length === 0;
+    // Cover intro is never rendered as a single bare <p> even when it collapses to one
+    // paragraph — that shortcut would drop the .cover-row--intro/.doc-cover-intro typography
+    // it needs to keep looking like the rest of the cover page.
+    const isPlain = block.type === 'plain-text';
+    const isSimple = !isPlain && block.paragraphs.length === 1 && block.paragraphs[0].type === 'p' && (!block.explanations || block.explanations.length === 0);
     let newTextHost;
     if (isSimple) {
       const p = document.createElement('p');
@@ -325,9 +371,9 @@
       newTextHost = p;
     } else {
       newTextHost = document.createElement('div');
-      newTextHost.className = 'content-row-text-group';
+      newTextHost.className = isPlain ? 'content-row-text-group doc-cover-intro' : 'content-row-text-group';
       newTextHost.appendChild(renderParagraphsToDom(block.paragraphs));
-      block.explanations.forEach((ex) => {
+      (block.explanations || []).forEach((ex) => {
         const def = document.createElement('div');
         def.className = 'content-definition';
         // The term itself is stored here rather than only relying on the <strong> rendered
@@ -393,7 +439,7 @@
     // Drop empty paragraphs (a stray blank line left over from pressing Enter one time too
     // many) rather than persisting them — they'd otherwise render as visible blank space.
     workingCopy.paragraphs = domToParagraphsModel(blockEls).filter((para) => para.type !== 'p' || para.text.trim() !== '');
-    syncExplanationsWithBoldTerms(workingCopy);
+    if (workingCopy.explanations) syncExplanationsWithBoldTerms(workingCopy);
   }
 
   function renderRowExplanations() {
@@ -444,12 +490,15 @@
     });
   }
 
-  // Shared by both edit surfaces: Cancel/Save on the left, a "..." overflow trigger on the
-  // right (Add a list / Add explanation / Delete section — the first two hidden for heading
-  // rows, which support neither). Icons reuse the project's existing SVGs; check.svg is
-  // inverted to read as white against the filled Save button, matching how .image-edit-trigger
-  // already inverts its icon against a dark circular background elsewhere in this file's CSS.
-  function buildActionsBar() {
+  // Shared by all edit surfaces: Cancel/Save on the left, an optional "..." overflow trigger
+  // on the right (Add a list / Add explanation / Delete section — the first two hidden for
+  // heading rows, which support neither). The overflow trigger itself is omitted entirely for
+  // block types where none of its three actions apply (the cover page's title/image/intro —
+  // fixed, non-deletable blocks with no bullets/explanations). Icons reuse the project's
+  // existing SVGs; check.svg is inverted to read as white against the filled Save button,
+  // matching how .image-edit-trigger already inverts its icon against a dark circular
+  // background elsewhere in this file's CSS.
+  function buildActionsBar({ overflow = true } = {}) {
     const actions = document.createElement('div');
     actions.className = 'row-editor-actions dialog-actions';
     actions.innerHTML = `
@@ -457,14 +506,19 @@
         <button type="button" class="btn btn-outlined" data-action="cancel-edit">Cancel <img class="btn-icon" src="assets/icons/close.svg" alt="" width="16" height="16"></button>
         <button type="button" class="btn btn-filled" data-action="save-edit">Save <img class="btn-icon icon-invert" src="assets/icons/check.svg" alt="" width="16" height="16"></button>
       </div>
-      <button type="button" class="row-overflow-btn" data-action="toggle-overflow" aria-label="More options" aria-haspopup="true" aria-expanded="false">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>
-      </button>
     `;
+    if (overflow) {
+      actions.insertAdjacentHTML('beforeend', `
+        <button type="button" class="row-overflow-btn" data-action="toggle-overflow" aria-label="More options" aria-haspopup="true" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>
+        </button>
+      `);
+    }
     return actions;
   }
 
   function buildTextEditSurface(rowEl) {
+    const isPlain = workingCopy.type === 'plain-text';
     const existingTextHost = rowEl.querySelector(':scope > .content-row-text, :scope > .content-row-text-group, :scope > .content-row-text-lines');
 
     const body = document.createElement('div');
@@ -478,14 +532,16 @@
     textHost.setAttribute('aria-label', 'Block text');
     textHost.setAttribute('data-row-text-host', '');
     textHost.appendChild(renderParagraphsToDom(workingCopy.paragraphs));
-
-    const explanations = document.createElement('div');
-    explanations.className = 'editor-explanation-list';
-    explanations.setAttribute('data-row-explanations', '');
-
     body.appendChild(textHost);
-    body.appendChild(explanations);
-    body.appendChild(buildActionsBar());
+
+    if (!isPlain) {
+      const explanations = document.createElement('div');
+      explanations.className = 'editor-explanation-list';
+      explanations.setAttribute('data-row-explanations', '');
+      body.appendChild(explanations);
+    }
+
+    body.appendChild(buildActionsBar({ overflow: !isPlain }));
 
     if (existingTextHost) existingTextHost.replaceWith(body);
     else rowEl.insertBefore(body, rowEl.querySelector('.edit-btn'));
@@ -499,8 +555,14 @@
     headingEl.contentEditable = 'true';
     headingEl.setAttribute('data-row-text-host', '');
 
-    rowEl.insertBefore(buildActionsBar(), rowEl.querySelector('.edit-btn'));
+    const showOverflow = workingCopy.type === 'heading' || workingCopy.type === 'subheading';
+    rowEl.insertBefore(buildActionsBar({ overflow: showOverflow }), rowEl.querySelector('.edit-btn'));
     headingEl.focus();
+  }
+
+  // The cover image has nothing to edit but the image itself — no text, no overflow menu.
+  function buildImageOnlyEditSurface(rowEl) {
+    rowEl.insertBefore(buildActionsBar({ overflow: false }), rowEl.querySelector('.edit-btn'));
   }
 
   function enterEditMode(rowEl, isNew) {
@@ -517,6 +579,7 @@
     rowEl.classList.add('is-editing');
 
     if (isHeadingRow(rowEl)) buildHeadingEditSurface(rowEl);
+    else if (isImageOnlyRow(rowEl)) buildImageOnlyEditSurface(rowEl);
     else buildTextEditSurface(rowEl);
   }
 
@@ -554,7 +617,7 @@
     if (mode === 'cancel') {
       writeBlockToDom(originalSnapshot);
     } else {
-      if (workingCopy.type === 'text') commitActiveText();
+      if (isParagraphBlock(workingCopy.type)) commitActiveText();
       else {
         const host = rowEl.querySelector('[data-row-text-host]');
         if (host) workingCopy.text = host.textContent;
@@ -688,7 +751,7 @@
   }
 
   function pickImage(src, alt) {
-    if (!workingCopy || workingCopy.type !== 'text') return;
+    if (!workingCopy || (workingCopy.type !== 'text' && workingCopy.type !== 'cover-image')) return;
     workingCopy.image = { src, alt };
     const rowImg = activeRowEl.querySelector('.content-row-photo');
     if (rowImg && rowImg.tagName === 'IMG') rowImg.setAttribute('src', src);
@@ -950,7 +1013,7 @@
 
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (workingCopy && workingCopy.type === 'text') {
+      if (workingCopy && isParagraphBlock(workingCopy.type)) {
         document.execCommand('insertParagraph');
         commitActiveText();
       }

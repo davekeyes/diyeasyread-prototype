@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<div class="translating-page">
+<div class="translating-page" data-doc-id="translating-intro">
   <button class="icon-fab close" aria-label="Close" onclick="window.location.href='get-started.html'" style="position:fixed;">
     <img src="assets/icons/close.svg" alt="" width="20" height="20">
   </button>
@@ -31,37 +31,61 @@
     <!-- Intro page 1: what's happening / what you can do -->
     <div class="doc-page">
       <div class="doc-content">
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block at top" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <img class="content-row-photo" src="assets/img/intro/screenshot-preview.png" alt="Screenshot of a DIY Easy Read preview page">
+        <div class="content-row" data-block-id="t1-r1">
+          <div class="content-row-photo-wrap">
+            <img class="content-row-photo" src="assets/img/intro/screenshot-preview.png" alt="Screenshot of a DIY Easy Read preview page">
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <div class="content-row-text-group">
             <p>Your <strong>preview</strong> will be ready soon.<br>Translations can take a few minutes.</p>
-            <div class="content-definition">
+            <div class="content-definition" data-term="preview">
               <span class="content-definition-emoji">&#128161;</span>
               <span><strong>Preview</strong> means it will be read-only, but you can buy or subscribe to save, edit and download.</span>
             </div>
           </div>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block between sections" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <img class="content-row-photo content-row-photo--contain" src="assets/img/intro/screenshot-wait.png" alt="Screenshot of a DIY Easy Read page while waiting">
+        <div class="content-row" data-block-id="t1-r2">
+          <div class="content-row-photo-wrap">
+            <img class="content-row-photo content-row-photo--contain" src="assets/img/intro/screenshot-wait.png" alt="Screenshot of a DIY Easy Read page while waiting">
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <p class="content-row-text">So, while you wait.</p>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block between sections" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <img class="content-row-photo content-row-photo--anchored-bottom" src="assets/img/intro/keep-scrolling-icon.svg" alt="Illustration of a person reading">
+        <div class="content-row" data-block-id="t1-r3">
+          <div class="content-row-photo-wrap">
+            <img class="content-row-photo content-row-photo--anchored-bottom" src="assets/img/intro/keep-scrolling-icon.svg" alt="Illustration of a person reading">
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <p class="content-row-text">Keep scrolling and reading.</p>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block between sections" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <img class="content-row-photo content-row-photo--illustration" src="assets/img/intro/learn-more-illustration.svg" alt="Illustration of a person checking a document">
+        <div class="content-row" data-block-id="t1-r4">
+          <div class="content-row-photo-wrap">
+            <img class="content-row-photo content-row-photo--illustration" src="assets/img/intro/learn-more-illustration.svg" alt="Illustration of a person checking a document">
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <p class="content-row-text">Learn what you can do with DIY Easy Read.</p>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block at bottom" width="16" height="16"></button></div>
       </div>
       <span class="doc-page-num">1</span>
     </div>
@@ -69,40 +93,64 @@
     <!-- Intro page 2: feature highlights -->
     <div class="doc-page">
       <div class="doc-content">
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block at top" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <div class="content-row-photo content-row-photo--placeholder"></div>
+        <div class="content-row" data-block-id="t2-r1">
+          <div class="content-row-photo-wrap">
+            <div class="content-row-photo content-row-photo--placeholder"></div>
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <div class="content-row-text-lines">
             <p>We provide a great Easy Read translation.</p>
             <p>You check and save your new Easy Read!</p>
           </div>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block between sections" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <div class="content-row-photo content-row-photo--placeholder"></div>
+        <div class="content-row" data-block-id="t2-r2">
+          <div class="content-row-photo-wrap">
+            <div class="content-row-photo content-row-photo--placeholder"></div>
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <div class="content-row-text-lines">
             <p>Edit the content if you want to.</p>
             <p>You can edit all of the Easy Read wording.</p>
           </div>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block between sections" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <div class="content-row-photo content-row-photo--placeholder"></div>
+        <div class="content-row" data-block-id="t2-r3">
+          <div class="content-row-photo-wrap">
+            <div class="content-row-photo content-row-photo--placeholder"></div>
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <div class="content-row-text-lines">
             <p>Add or change headings and subheadings.</p>
             <p>Search for different images or use your own.</p>
           </div>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block between sections" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <div class="content-row-photo content-row-photo--placeholder"></div>
+        <div class="content-row" data-block-id="t2-r4">
+          <div class="content-row-photo-wrap">
+            <div class="content-row-photo content-row-photo--placeholder"></div>
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <p class="content-row-text">If you like, give it a go now.<br>Try editing this section.</p>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block at bottom" width="16" height="16"></button></div>
       </div>
       <span class="doc-page-num">2</span>
     </div>
@@ -110,37 +158,61 @@
     <!-- Intro page 3: more feature highlights -->
     <div class="doc-page">
       <div class="doc-content">
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block at top" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <div class="content-row-photo content-row-photo--placeholder"></div>
+        <div class="content-row" data-block-id="t3-r1">
+          <div class="content-row-photo-wrap">
+            <div class="content-row-photo content-row-photo--placeholder"></div>
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <div class="content-row-text-lines">
             <p>You can highlight tricky words.</p>
             <p>Add a highlight definition right below.</p>
           </div>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block between sections" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <div class="content-row-photo content-row-photo--placeholder"></div>
+        <div class="content-row" data-block-id="t3-r2">
+          <div class="content-row-photo-wrap">
+            <div class="content-row-photo content-row-photo--placeholder"></div>
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <div class="content-row-text-lines">
             <p>Use light mode when in bright surroundings.</p>
             <p>Try dark mode if it is dim or dark around.</p>
           </div>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block between sections" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <div class="content-row-photo content-row-photo--placeholder"></div>
+        <div class="content-row" data-block-id="t3-r3">
+          <div class="content-row-photo-wrap">
+            <div class="content-row-photo content-row-photo--placeholder"></div>
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <p class="content-row-text">Organisations:<br>Your team can access the same translations,<br>to review, edit or add more.</p>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block between sections" width="16" height="16"></button></div>
 
-        <div class="content-row">
-          <div class="content-row-photo content-row-photo--placeholder"></div>
+        <div class="content-row" data-block-id="t3-r4">
+          <div class="content-row-photo-wrap">
+            <div class="content-row-photo content-row-photo--placeholder"></div>
+            <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
+              <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            </button>
+          </div>
           <p class="content-row-text">Organisations:<br>Customise branding and content templates.</p>
+          <button type="button" class="edit-btn" data-edit-block><span>Edit</span><img src="assets/icons/edit.svg" alt=""></button>
         </div>
-        <div class="between-section"><div class="add-btn"><img src="assets/icons/add.svg" alt="" width="16" height="16"></div></div>
+        <div class="between-section"><button type="button" class="add-btn"><img src="assets/icons/add.svg" alt="Add block at bottom" width="16" height="16"></button></div>
       </div>
       <span class="doc-page-num">3</span>
     </div>
@@ -166,6 +238,43 @@
   </div>
 </div>
 
+<div class="menu-dropdown image-popover" id="image-popover" hidden>
+  <div class="field">
+    <label class="field-label" for="image-popover-search">Search image bank</label>
+    <div class="editor-toolbar">
+      <input type="text" class="field-input" id="image-popover-search" style="flex:1; min-width:200px;">
+      <button type="button" class="btn btn-outlined" id="image-popover-search-btn" style="min-height:48px;">Search</button>
+    </div>
+    <div class="editor-image-grid" id="image-popover-grid"></div>
+  </div>
+  <div class="editor-upload-row">
+    <button type="button" class="btn btn-outlined" id="image-popover-upload-btn">Upload photo</button>
+    <input type="file" accept="image/*" id="image-popover-upload-input" hidden>
+  </div>
+</div>
+
+<div class="menu-dropdown add-menu-popover" id="add-block-menu" hidden>
+  <button type="button" class="menu-item is-action" data-add-type="section"><span>Add content section</span></button>
+  <button type="button" class="menu-item is-action" data-add-type="heading"><span>Add heading</span></button>
+  <button type="button" class="menu-item is-action" data-add-type="subheading"><span>Add sub heading</span></button>
+</div>
+
+<div class="menu-dropdown row-overflow-menu" id="row-overflow-menu" hidden>
+  <button type="button" class="menu-item is-action" data-action="toggle-list">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="4" cy="6" r="1.5" fill="#003B49"></circle><path d="M9 6h11" stroke="#003B49" stroke-width="2" stroke-linecap="round"></path><circle cx="4" cy="12" r="1.5" fill="#003B49"></circle><path d="M9 12h11" stroke="#003B49" stroke-width="2" stroke-linecap="round"></path><circle cx="4" cy="18" r="1.5" fill="#003B49"></circle><path d="M9 18h11" stroke="#003B49" stroke-width="2" stroke-linecap="round"></path></svg>
+    <span>Add a list</span>
+  </button>
+  <button type="button" class="menu-item is-action" data-action="add-explanation">
+    <span class="content-definition-emoji" style="font-size:20px; line-height:1;">&#128161;</span>
+    <span>Add explanation</span>
+  </button>
+  <div class="menu-divider"></div>
+  <button type="button" class="menu-item is-action menu-item-danger" data-action="delete-section">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17.5528 21.5192H6.447C6.02624 21.5192 5.62269 21.3521 5.32516 21.0545C5.02762 20.757 4.86047 20.3535 4.86047 19.9326V5.65381H19.1393V19.9326C19.1393 20.3535 18.9722 20.757 18.6746 21.0545C18.3771 21.3521 17.9735 21.5192 17.5528 21.5192Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.62016 16.7596V10.4135" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M14.3799 16.7596V10.4135" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M1.6875 5.65381H22.3125" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M14.3799 2.48071H9.62021C9.19944 2.48071 8.79589 2.64787 8.49836 2.9454C8.20082 3.24293 8.03368 3.64647 8.03368 4.06725V5.65379H15.9663V4.06725C15.9663 3.64647 15.7992 3.24293 15.5017 2.9454C15.2041 2.64787 14.8006 2.48071 14.3799 2.48071Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    <span>Delete section</span>
+  </button>
+</div>
+
 <script>
   const readyBanner = document.getElementById('ready-banner');
   function showReadyBanner() { readyBanner.classList.add('visible'); }
@@ -179,6 +288,7 @@
   }, { once: true });
 </script>
 <script src="assets/content-blocks.js"></script>
+<script src="assets/content-editor.js"></script>
 
 </body>
 </html>

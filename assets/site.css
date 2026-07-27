@@ -545,6 +545,29 @@
 .doc-cover-intro { display: flex; flex-direction: column; gap: var(--space-2); flex-shrink: 0; width: calc(100% - 64px); margin: 0 var(--space-6); box-sizing: border-box; }
 .doc-cover-intro p { font-size: 28px; line-height: 36px; color: var(--fg-primary); margin: 0; }
 
+/* Cover page editing: the title/image/intro reuse .content-row's edit-mode machinery (Edit
+   button, Cancel/Save, image-edit-trigger) but must look exactly as before at rest — no card
+   background/border/shadow — since Dave didn't ask for a visual redesign, only for these to
+   become editable. The card chrome only appears while a cover block is actively being edited. */
+.doc-cover .content-row {
+  position: relative; display: block; width: auto; min-height: 0; flex-shrink: 0;
+  background: none; padding: 0; border-radius: 0; box-shadow: none;
+}
+.doc-cover .content-row:hover { background: none; box-shadow: none; }
+.doc-cover .content-row.is-editing {
+  display: flex; flex-direction: column; gap: var(--space-4); align-items: stretch;
+  background: var(--sand-000); padding: var(--space-4); border-radius: var(--radius-lg);
+  box-shadow: 0 2px 4px rgba(0, 35, 43, 0.06), 0 4px 8px rgba(0, 35, 43, 0.06);
+}
+/* .doc-cover-art doubles as .content-row-photo-wrap (the image-edit-trigger's positioning
+   context) rather than nesting a second wrapper inside it — avoids a percentage-width child
+   trying to size itself against an unsized wrapper. */
+.doc-cover-art .content-row-photo { width: 100%; height: auto; object-fit: initial; background: none; border-radius: 0; }
+/* Specificity needs to beat plain .content-row-text-group's own gap/min-height/font-size —
+   the cover intro keeps its existing look, just gains the class getTextBlockEls looks for. */
+.doc-cover-intro.content-row-text-group { gap: var(--space-2); min-height: 0; flex: none; }
+.doc-cover-intro.content-row-text-group p { font-size: 28px; line-height: 36px; }
+
 .doc-content { flex: 1; display: flex; flex-direction: column; gap: 0; align-items: center; align-self: stretch; box-sizing: border-box; width: 100%; }
 
 .between-section { height: 40px; align-self: stretch; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
@@ -819,7 +842,7 @@
   .doc-page { width: 100%; height: auto; aspect-ratio: 800 / 1132; }
   .doc-cover-title { font-size: 36px; margin: 0 var(--space-4); }
   .doc-cover-intro { width: calc(100% - 32px); margin: 0 var(--space-4); }
-  .doc-cover-intro p, .content-row-text, .content-row-text-group p { font-size: 18px; line-height: 26px; }
+  .doc-cover-intro p, .content-row-text, .content-row-text-group p, .doc-cover-intro.content-row-text-group p { font-size: 18px; line-height: 26px; }
   .content-row, .content-row--top { width: 100%; height: auto; flex-direction: column; align-items: center; text-align: center; padding: var(--space-5); }
   .content-row-photo { width: 96px; height: 96px; }
   .content-row-text-group { height: auto; align-items: center; }

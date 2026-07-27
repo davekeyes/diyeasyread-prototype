@@ -7,8 +7,9 @@ function layoutContentRows() {
   const PHOTO_HEIGHT = 192;
   document.querySelectorAll('.content-row').forEach((row) => {
     // Heading/sub-heading rows have no photo to compare text height against — this rule
-    // doesn't apply to them.
-    if (row.classList.contains('content-row--heading') || row.classList.contains('content-row--subheading')) return;
+    // doesn't apply to them. Neither does the cover page's title/image/intro, which never
+    // sit side-by-side with a photo the way a normal content row does.
+    if (row.classList.contains('content-row--heading') || row.classList.contains('content-row--subheading') || row.closest('.doc-cover')) return;
     const textEl = row.querySelector('.content-row-text, .content-row-text-group, .content-row-text-lines');
     if (!textEl) return;
     row.classList.toggle('content-row--top', textEl.scrollHeight > PHOTO_HEIGHT);
