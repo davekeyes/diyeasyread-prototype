@@ -279,13 +279,7 @@
   const readyBanner = document.getElementById('ready-banner');
   function showReadyBanner() { readyBanner.classList.add('visible'); }
 
-  const readyTimer = setTimeout(showReadyBanner, 14000);
-
-  // Let a click anywhere bring the banner in early, instead of waiting out the timer
-  document.addEventListener('click', () => {
-    clearTimeout(readyTimer);
-    showReadyBanner();
-  }, { once: true });
+  setTimeout(showReadyBanner, 14000);
 </script>
 <script src="assets/content-blocks.js"></script>
 <script src="assets/content-editor.js"></script>

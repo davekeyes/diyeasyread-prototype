@@ -887,10 +887,7 @@
     // this only ever fires for the rest of the row (text, background, or the image itself
     // before its hover-trigger becomes interactive). Tapping the image specifically also
     // opens the image popover immediately, rather than requiring a second tap once editing.
-    // Not on translating.html — that page has its own click-triggered behavior (the ready
-    // banner) and reads more like a busy learning/testing ground, where accidentally opening
-    // edit mode from a stray click is a worse outcome than requiring the explicit Edit button.
-    const rowForTap = docId !== 'translating-intro' ? e.target.closest('.content-row') : null;
+    const rowForTap = e.target.closest('.content-row');
     if (rowForTap && !rowForTap.classList.contains('is-editing')) {
       const tappedImage = e.target.closest('.content-row-photo');
       enterEditMode(rowForTap);
