@@ -848,7 +848,7 @@
         <div class="content-row-photo-wrap">
           <div class="content-row-photo content-row-photo--placeholder"></div>
           <button type="button" class="image-edit-trigger" data-image-trigger aria-label="Change image" aria-haspopup="true">
-            <img src="assets/icons/image.svg" alt="" width="20" height="20">
+            <img src="assets/icons/edit.svg" alt="" width="20" height="20">
           </button>
         </div>
         <p class="content-row-text">New content section</p>
