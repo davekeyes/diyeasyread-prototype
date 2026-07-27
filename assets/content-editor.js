@@ -727,6 +727,8 @@
     const isText = !!workingCopy && workingCopy.type === 'text';
     overflowMenu.querySelector('[data-action="toggle-list"]').hidden = !isText;
     overflowMenu.querySelector('[data-action="add-explanation"]').hidden = !isText;
+    const divider = overflowMenu.querySelector('.menu-divider');
+    if (divider) divider.hidden = !isText;
     overflowMenuTriggerEl = triggerEl;
     overflowMenu.hidden = false;
     positionPopover(overflowMenu, triggerEl);
