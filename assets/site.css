@@ -797,9 +797,11 @@
   outline: none; box-shadow: none; border-color: var(--teal-700);
 }
 
-.image-popover, .add-menu-popover, .row-overflow-menu { position: fixed; z-index: 20; }
-.image-popover { width: 320px; }
+.add-menu-popover, .row-overflow-menu { position: fixed; z-index: 20; }
 .add-menu-popover { width: 220px; }
+/* Now a proper <dialog> (see document.html/translating.html) rather than a JS-positioned
+   dropdown — reuses .dialog's own centering, backdrop, 32px padding, and close-button slot. */
+.image-popover { width: 640px; }
 
 /* -------- Screen 4: Dashboard -------- */
 .dashboard-page { min-height: 100vh; background: var(--sand-100); color: var(--fg-primary); }

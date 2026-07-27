@@ -671,8 +671,13 @@
   const imagePopoverSearch = document.getElementById('image-popover-search');
   const imagePopoverGrid = document.getElementById('image-popover-grid');
   const imagePopoverUploadInput = document.getElementById('image-popover-upload-input');
-  let imagePopoverRowEl = null;
-  let imagePopoverTriggerEl = null;
+
+  // Clicking the backdrop (a click landing on the <dialog> element itself, not a descendant)
+  // dismisses it, matching the click-outside-closes affordance the old JS-positioned popover
+  // version had.
+  imagePopover.addEventListener('click', (e) => {
+    if (e.target === imagePopover) closeImagePopover();
+  });
 
   function positionPopover(popoverEl, triggerEl) {
     const rect = triggerEl.getBoundingClientRect();
@@ -692,13 +697,13 @@
     popoverEl.style.top = openUpward ? `${rect.top - height - 8}px` : `${rect.bottom + 8}px`;
   }
 
-  // These popovers are position:fixed (deliberately — see openImagePopover/openAddMenu),
+  // These popovers are position:fixed (deliberately — see openAddMenu/openOverflowMenu),
   // so they don't move with the page on their own the way a position:absolute element
   // anchored in normal flow would. Re-running positionPopover against each one's stored
   // trigger element on every scroll/resize keeps whichever is open visually attached to its
-  // trigger instead of drifting away as the page scrolls underneath it.
+  // trigger instead of drifting away as the page scrolls underneath it. The image popover is
+  // a real <dialog> now (browser-centered, not trigger-anchored), so it's excluded here.
   function repositionOpenPopovers() {
-    if (imagePopover && !imagePopover.hidden && imagePopoverTriggerEl) positionPopover(imagePopover, imagePopoverTriggerEl);
     if (addMenu && !addMenu.hidden && addMenuTriggerEl) positionPopover(addMenu, addMenuTriggerEl);
     if (overflowMenu && !overflowMenu.hidden && overflowMenuTriggerEl) positionPopover(overflowMenu, overflowMenuTriggerEl);
   }
@@ -732,22 +737,17 @@
     if (activeRowEl !== rowEl) enterEditMode(rowEl);
     closeAddMenu();
     closeOverflowMenu();
-    imagePopoverRowEl = rowEl;
-    imagePopoverTriggerEl = triggerEl;
     const query = plainTextOf(workingCopy);
     imagePopoverSearch.value = query;
     renderImagePopoverResults(query);
-    imagePopover.hidden = false;
-    positionPopover(imagePopover, triggerEl);
+    imagePopover.showModal();
     triggerEl.setAttribute('aria-expanded', 'true');
   }
 
   function closeImagePopover() {
-    if (imagePopover.hidden) return;
-    imagePopover.hidden = true;
+    if (!imagePopover.open) return;
+    imagePopover.close();
     document.querySelectorAll('[data-image-trigger][aria-expanded="true"]').forEach((el) => el.setAttribute('aria-expanded', 'false'));
-    imagePopoverRowEl = null;
-    imagePopoverTriggerEl = null;
   }
 
   function pickImage(src, alt) {
@@ -971,13 +971,15 @@
       imagePopoverUploadInput.click();
       return;
     }
+    if (e.target.closest('[data-action="close-image-popover"]')) { closeImagePopover(); return; }
 
     if (e.target.closest('[data-action="save-edit"]')) { exitEditMode('save'); return; }
     if (e.target.closest('[data-action="cancel-edit"]')) { exitEditMode('cancel'); return; }
 
     // Clicking anywhere outside an open popover closes it (the popovers themselves are
-    // position:fixed siblings of everything else, so this is a safe global check).
-    if (imagePopover && !imagePopover.hidden && !imagePopover.contains(e.target) && !e.target.closest('[data-image-trigger]')) closeImagePopover();
+    // position:fixed siblings of everything else, so this is a safe global check). The image
+    // popover is a real modal <dialog> now — its own backdrop-click listener above handles
+    // that case, and its inertness means a click can't reach anything else while it's open.
     if (addMenu && !addMenu.hidden && !addMenu.contains(e.target) && !e.target.closest('.add-btn, [data-add-trigger]')) closeAddMenu();
     if (overflowMenu && !overflowMenu.hidden && !overflowMenu.contains(e.target) && !e.target.closest('[data-action="toggle-overflow"]')) closeOverflowMenu();
   });
@@ -992,7 +994,10 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (addMenu && !addMenu.hidden) { closeAddMenu(); return; }
-      if (imagePopover && !imagePopover.hidden) { closeImagePopover(); return; }
+      // The image popover is a native <dialog> — the browser already closes it on Escape
+      // (which fires our own 'close' listener for cleanup); this just guards against that
+      // same keydown also falling through to cancel the row edit underneath.
+      if (imagePopover && imagePopover.open) { closeImagePopover(); return; }
       if (overflowMenu && !overflowMenu.hidden) { closeOverflowMenu(); return; }
       if (activeRowEl) { exitEditMode('cancel'); return; }
       return;
