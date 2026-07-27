@@ -757,6 +757,8 @@
 
 .content-row--heading, .content-row--subheading { min-height: 0; justify-content: flex-start; align-items: center; }
 .content-row-heading-text { margin: 0; flex: 1; }
+.content-row--heading .content-row-heading-text { font-size: 40px; line-height: 48px; font-weight: 700; }
+.content-row--subheading .content-row-heading-text { font-size: 32px; line-height: 40px; font-weight: 700; }
 /* Same single-border pattern as .field-input/.editor-contenteditable — a border, not an
    offset outline, so it's one visible ring rather than a border-plus-detached-outline. */
 .content-row-heading-text[contenteditable="true"] {
