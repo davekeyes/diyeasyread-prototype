@@ -498,7 +498,7 @@
   // existing SVGs; check.svg is inverted to read as white against the filled Save button,
   // matching how .image-edit-trigger already inverts its icon against a dark circular
   // background elsewhere in this file's CSS.
-  function buildActionsBar({ overflow = true } = {}) {
+  function buildActionsBar({ overflow = true, deleteButton = false } = {}) {
     const actions = document.createElement('div');
     actions.className = 'row-editor-actions dialog-actions';
     actions.innerHTML = `
@@ -511,6 +511,15 @@
       actions.insertAdjacentHTML('beforeend', `
         <button type="button" class="row-overflow-btn" data-action="toggle-overflow" aria-label="More options" aria-haspopup="true" aria-expanded="false">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>
+        </button>
+      `);
+    } else if (deleteButton) {
+      // Heading/sub-heading rows support no other overflow action (no bullets, no
+      // explanations) — a dropdown with a single "Delete section" entry is just an extra
+      // click for no reason, so show the delete action directly instead.
+      actions.insertAdjacentHTML('beforeend', `
+        <button type="button" class="row-delete-btn" data-action="delete-section" aria-label="Delete section">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17.5528 21.5192H6.447C6.02624 21.5192 5.62269 21.3521 5.32516 21.0545C5.02762 20.757 4.86047 20.3535 4.86047 19.9326V5.65381H19.1393V19.9326C19.1393 20.3535 18.9722 20.757 18.6746 21.0545C18.3771 21.3521 17.9735 21.5192 17.5528 21.5192Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.62016 16.7596V10.4135" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M14.3799 16.7596V10.4135" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M1.6875 5.65381H22.3125" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M14.3799 2.48071H9.62021C9.19944 2.48071 8.79589 2.64787 8.49836 2.9454C8.20082 3.24293 8.03368 3.64647 8.03368 4.06725V5.65379H15.9663V4.06725C15.9663 3.64647 15.7992 3.24293 15.5017 2.9454C15.2041 2.64787 14.8006 2.48071 14.3799 2.48071Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
         </button>
       `);
     }
@@ -555,8 +564,8 @@
     headingEl.contentEditable = 'true';
     headingEl.setAttribute('data-row-text-host', '');
 
-    const showOverflow = workingCopy.type === 'heading' || workingCopy.type === 'subheading';
-    rowEl.insertBefore(buildActionsBar({ overflow: showOverflow }), rowEl.querySelector('.edit-btn'));
+    const isRealHeading = workingCopy.type === 'heading' || workingCopy.type === 'subheading';
+    rowEl.insertBefore(buildActionsBar({ overflow: false, deleteButton: isRealHeading }), rowEl.querySelector('.edit-btn'));
     headingEl.focus();
   }
 
