@@ -514,6 +514,11 @@
 .menu-dropdown.doc-menu { top: 56px; }
 .menu-dropdown[hidden] { display: none; }
 .menu-item { display: flex; flex-direction: row; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-5); }
+/* .menu-item's own unconditional display:flex has the same specificity as the [hidden]
+   attribute's UA-stylesheet default (display:none) — author CSS wins the tie, so without
+   this override, hiding an individual item (e.g. Add a list/Add explanation on a heading
+   row) never actually took visual effect despite the `hidden` property being set correctly. */
+.menu-item[hidden] { display: none; }
 .menu-item.is-action { cursor: pointer; background: none; border: none; text-align: left; font-family: inherit; width: 100%; }
 .menu-item span { font-size: 18px; line-height: 24px; color: var(--fg-primary); }
 .menu-item .dot { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--fg-secondary); }
