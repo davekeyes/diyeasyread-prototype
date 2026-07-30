@@ -118,7 +118,12 @@ function repaginateContentPages() {
     // is the hard ceiling that catches that case.
     const rowWouldExceedRowCapacity = rowHeight > 0 && rowHeightSoFar > 0 && rowHeightSoFar + rowHeight > rowCapacity;
     const totalWouldExceedFullHeight = totalHeightSoFar > 0 && totalHeightSoFar + groupHeight > fullHeight;
-    if (rowWouldExceedRowCapacity || totalWouldExceedFullHeight) {
+    // A heading added via the "+" at the top of a page is marked data-page-break-before —
+    // it must start a fresh page even when there's physically room to pull it onto the tail
+    // of the current one. Only forces a break if the current bucket already has something in
+    // it; if the bucket's still empty, this row is already about to start a page on its own.
+    const forcesPageBreak = !!(rowEl && rowEl.dataset.pageBreakBefore === 'true' && buckets[buckets.length - 1].length > 0);
+    if (rowWouldExceedRowCapacity || totalWouldExceedFullHeight || forcesPageBreak) {
       buckets.push([]);
       rowHeightSoFar = 0;
       totalHeightSoFar = 0;

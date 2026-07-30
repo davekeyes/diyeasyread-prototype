@@ -831,10 +831,16 @@
   function insertNewBlock(betweenEl, type) {
     const id = nextBlockId();
     let row;
+    // A heading added via the "+" at the very top of a page is meant to start that page —
+    // pin it with a page-break-before marker so repagination (content-blocks.js) can't pull
+    // it back onto the tail of the previous page just because there's room for it there.
+    const isTopOfPage = betweenEl === betweenEl.parentElement.firstElementChild;
+
     if (type === 'heading' || type === 'subheading') {
       row = document.createElement('div');
       row.className = `content-row content-row--${type}`;
       row.dataset.blockId = id;
+      if (type === 'heading' && isTopOfPage) row.dataset.pageBreakBefore = 'true';
       const tag = type === 'heading' ? 'h2' : 'h3';
       row.innerHTML = `
         <${tag} class="content-row-heading-text">${type === 'heading' ? 'New heading' : 'New sub heading'}</${tag}>
