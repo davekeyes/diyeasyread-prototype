@@ -675,17 +675,59 @@
   }
 
   // ---------- Image popover ----------
+  // A hand-built modal (overlay + panel), not the native <dialog> this used to be — matching
+  // the Radix Dialog pattern the real product's own modals use (FragmentEditor/
+  // ImageBankSelector), rather than a third, browser-native pattern of our own. Radix itself
+  // is a React library and doesn't apply here, so this reproduces the same behavioral
+  // contract by hand: focus moves into the panel on open and is trapped there via Tab, the
+  // rest of the page is marked inert (blocks both pointer and assistive-tech virtual-cursor
+  // access, not just visual click-through), Escape/backdrop-click/close-button all dismiss,
+  // and focus returns to whichever button opened it.
 
+  const imagePopoverOverlay = document.getElementById('image-popover-overlay');
   const imagePopover = document.getElementById('image-popover');
   const imagePopoverSearch = document.getElementById('image-popover-search');
   const imagePopoverGrid = document.getElementById('image-popover-grid');
   const imagePopoverUploadInput = document.getElementById('image-popover-upload-input');
+  let imagePopoverReturnFocusEl = null;
 
-  // Clicking the backdrop (a click landing on the <dialog> element itself, not a descendant)
+  function isImagePopoverOpen() {
+    return !imagePopoverOverlay.hidden;
+  }
+
+  // Every direct child of <body> except the overlay itself — the main page content and the
+  // other (already-closed) popovers — goes inert while this modal is open.
+  function setBackgroundInert(isInert) {
+    Array.from(document.body.children).forEach((el) => {
+      if (el === imagePopoverOverlay) return;
+      if (isInert) el.setAttribute('inert', '');
+      else el.removeAttribute('inert');
+    });
+  }
+
+  // Clicking the backdrop (a click landing on the overlay itself, not the panel inside it)
   // dismisses it, matching the click-outside-closes affordance the old JS-positioned popover
   // version had.
-  imagePopover.addEventListener('click', (e) => {
-    if (e.target === imagePopover) closeImagePopover();
+  imagePopoverOverlay.addEventListener('click', (e) => {
+    if (e.target === imagePopoverOverlay) closeImagePopover();
+  });
+
+  // Focus trap: Tab/Shift+Tab cycle only through the panel's own focusable elements while open.
+  imagePopoverOverlay.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab' || !isImagePopoverOpen()) return;
+    const focusable = Array.from(imagePopover.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter((el) => el.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   });
 
   function positionPopover(popoverEl, triggerEl) {
@@ -749,14 +791,25 @@
     const query = plainTextOf(workingCopy);
     imagePopoverSearch.value = query;
     renderImagePopoverResults(query);
-    imagePopover.showModal();
+    imagePopoverReturnFocusEl = triggerEl;
+    setBackgroundInert(true);
+    imagePopoverOverlay.hidden = false;
+    // Focus lands on the panel itself, not straight into a form field — matches the WAI-ARIA
+    // dialog pattern (and Radix's own default) so a screen reader announces the dialog's
+    // label/heading before anything else.
+    imagePopover.focus();
     triggerEl.setAttribute('aria-expanded', 'true');
   }
 
   function closeImagePopover() {
-    if (!imagePopover.open) return;
-    imagePopover.close();
+    if (!isImagePopoverOpen()) return;
+    imagePopoverOverlay.hidden = true;
+    setBackgroundInert(false);
     document.querySelectorAll('[data-image-trigger][aria-expanded="true"]').forEach((el) => el.setAttribute('aria-expanded', 'false'));
+    if (imagePopoverReturnFocusEl) {
+      imagePopoverReturnFocusEl.focus();
+      imagePopoverReturnFocusEl = null;
+    }
   }
 
   function pickImage(src, alt) {
@@ -1009,10 +1062,7 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (addMenu && !addMenu.hidden) { closeAddMenu(); return; }
-      // The image popover is a native <dialog> — the browser already closes it on Escape
-      // (which fires our own 'close' listener for cleanup); this just guards against that
-      // same keydown also falling through to cancel the row edit underneath.
-      if (imagePopover && imagePopover.open) { closeImagePopover(); return; }
+      if (imagePopoverOverlay && isImagePopoverOpen()) { closeImagePopover(); return; }
       if (overflowMenu && !overflowMenu.hidden) { closeOverflowMenu(); return; }
       if (activeRowEl) { exitEditMode('cancel'); return; }
       return;

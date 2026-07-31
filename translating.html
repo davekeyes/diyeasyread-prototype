@@ -238,24 +238,26 @@
   </div>
 </div>
 
-<dialog class="dialog image-popover" id="image-popover" aria-labelledby="image-popover-title">
-  <button type="button" class="icon-fab close" data-action="close-image-popover" aria-label="Close">
-    <img src="assets/icons/close.svg" alt="" width="20" height="20">
-  </button>
-  <h2 class="dialog-title" id="image-popover-title">Change image</h2>
-  <div class="field">
-    <label class="field-label" for="image-popover-search">Search image bank</label>
-    <div class="editor-toolbar">
-      <input type="text" class="field-input" id="image-popover-search" style="flex:1; min-width:200px;">
-      <button type="button" class="btn btn-outlined" id="image-popover-search-btn" style="min-height:48px;">Search</button>
+<div class="dialog-overlay" id="image-popover-overlay" hidden>
+  <div class="dialog image-popover" id="image-popover" role="dialog" aria-modal="true" aria-labelledby="image-popover-title" tabindex="-1">
+    <button type="button" class="icon-fab close" data-action="close-image-popover" aria-label="Close">
+      <img src="assets/icons/close.svg" alt="" width="20" height="20">
+    </button>
+    <h2 class="dialog-title" id="image-popover-title">Change image</h2>
+    <div class="field">
+      <label class="field-label" for="image-popover-search">Search image bank</label>
+      <div class="editor-toolbar">
+        <input type="text" class="field-input" id="image-popover-search" style="flex:1; min-width:200px;">
+        <button type="button" class="btn btn-outlined" id="image-popover-search-btn" style="min-height:48px;">Search</button>
+      </div>
+      <div class="editor-image-grid" id="image-popover-grid"></div>
     </div>
-    <div class="editor-image-grid" id="image-popover-grid"></div>
+    <div class="editor-upload-row">
+      <button type="button" class="btn btn-outlined" id="image-popover-upload-btn">Upload photo</button>
+      <input type="file" accept="image/*" id="image-popover-upload-input" hidden>
+    </div>
   </div>
-  <div class="editor-upload-row">
-    <button type="button" class="btn btn-outlined" id="image-popover-upload-btn">Upload photo</button>
-    <input type="file" accept="image/*" id="image-popover-upload-input" hidden>
-  </div>
-</dialog>
+</div>
 
 <div class="menu-dropdown add-menu-popover" id="add-block-menu" hidden>
   <button type="button" class="menu-item is-action" data-add-type="section"><span>Add content section</span></button>
