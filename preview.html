@@ -206,25 +206,78 @@
   </div>
 </div>
 
-<dialog class="dialog" id="upgrade-dialog" aria-labelledby="upgrade-dialog-title">
-  <button type="button" class="icon-fab close" aria-label="Close" data-action="cancel">
-    <img src="assets/icons/close.svg" alt="" width="20" height="20">
-  </button>
-  <h2 class="dialog-title" id="upgrade-dialog-title">Preview only</h2>
-  <p>This is a read-only preview. Buy or subscribe to save your changes, edit content, and download your Easy Read document.</p>
-  <div class="dialog-actions">
-    <button type="button" class="btn btn-link" data-action="cancel">Continue previewing</button>
-    <a class="btn btn-filled" href="dashboard.html">Buy or subscribe</a>
+<div class="dialog-overlay" id="upgrade-dialog-overlay" hidden>
+  <div class="dialog" id="upgrade-dialog" role="dialog" aria-modal="true" aria-labelledby="upgrade-dialog-title" tabindex="-1">
+    <button type="button" class="icon-fab close" aria-label="Close" data-action="cancel">
+      <img src="assets/icons/close.svg" alt="" width="20" height="20">
+    </button>
+    <h2 class="dialog-title" id="upgrade-dialog-title">Preview only</h2>
+    <p>This is a read-only preview. Buy or subscribe to save your changes, edit content, and download your Easy Read document.</p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-link" data-action="cancel">Continue previewing</button>
+      <a class="btn btn-filled" href="dashboard.html">Buy or subscribe</a>
+    </div>
   </div>
-</dialog>
+</div>
 
 <script>
+  // Same hand-built Radix-style modal pattern as the image popover in content-editor.js —
+  // overlay + panel, manual focus trap, inert background, focus returned to whichever
+  // control opened it. Kept as a self-contained inline script (not content-editor.js) since
+  // preview.html must never load that file — this page stays structurally read-only.
+  const upgradeDialogOverlay = document.getElementById('upgrade-dialog-overlay');
   const upgradeDialog = document.getElementById('upgrade-dialog');
+  let upgradeDialogReturnFocusEl = null;
+
+  function isUpgradeDialogOpen() { return !upgradeDialogOverlay.hidden; }
+
+  function setUpgradeBackgroundInert(isInert) {
+    Array.from(document.body.children).forEach((el) => {
+      if (el === upgradeDialogOverlay) return;
+      if (isInert) el.setAttribute('inert', '');
+      else el.removeAttribute('inert');
+    });
+  }
+
+  function openUpgradeDialog(triggerEl) {
+    upgradeDialogReturnFocusEl = triggerEl || document.activeElement;
+    setUpgradeBackgroundInert(true);
+    upgradeDialogOverlay.hidden = false;
+    upgradeDialog.focus();
+  }
+
+  function closeUpgradeDialog() {
+    if (!isUpgradeDialogOpen()) return;
+    upgradeDialogOverlay.hidden = true;
+    setUpgradeBackgroundInert(false);
+    if (upgradeDialogReturnFocusEl) {
+      upgradeDialogReturnFocusEl.focus();
+      upgradeDialogReturnFocusEl = null;
+    }
+  }
+
   document.querySelectorAll('[data-nudge-signup], .add-btn').forEach((btn) => {
-    btn.addEventListener('click', () => upgradeDialog.showModal());
+    btn.addEventListener('click', () => openUpgradeDialog(btn));
   });
   upgradeDialog.querySelectorAll('[data-action="cancel"]').forEach((btn) => {
-    btn.addEventListener('click', () => upgradeDialog.close());
+    btn.addEventListener('click', () => closeUpgradeDialog());
+  });
+  upgradeDialogOverlay.addEventListener('click', (e) => {
+    if (e.target === upgradeDialogOverlay) closeUpgradeDialog();
+  });
+  upgradeDialogOverlay.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab' || !isUpgradeDialogOpen()) return;
+    const focusable = Array.from(upgradeDialog.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter((el) => el.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isUpgradeDialogOpen()) closeUpgradeDialog();
   });
 </script>
 <script src="assets/content-blocks.js"></script>
